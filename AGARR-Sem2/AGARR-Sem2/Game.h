@@ -6,6 +6,7 @@
 
 #include "DeviceResources.h"
 #include "StepTimer.h"
+#include "GameObject.h"
 
 
 // A basic game implementation that creates a D3D11 device and

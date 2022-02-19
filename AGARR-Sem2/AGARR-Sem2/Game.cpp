@@ -40,8 +40,7 @@ void Game::Initialize(HWND window, int width, int height)
 // Executes the basic game loop.
 void Game::Tick()
 {
-	m_timer.Tick([&]()
-	{
+	m_timer.Tick([&]() {
 		Update(m_timer);
 	});
 
@@ -52,9 +51,6 @@ void Game::Tick()
 void Game::Update(DX::StepTimer const& timer)
 {
 	float elapsedTime = float(timer.GetElapsedSeconds());
-
-	// TODO: Add your game logic here.
-	elapsedTime;
 }
 #pragma endregion
 
