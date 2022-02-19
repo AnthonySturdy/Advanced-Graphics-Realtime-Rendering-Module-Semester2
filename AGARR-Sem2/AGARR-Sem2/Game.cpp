@@ -13,19 +13,18 @@ using Microsoft::WRL::ComPtr;
 
 Game::Game() noexcept(false)
 {
-	m_deviceResources = std::make_unique<DX::DeviceResources>();
-	m_deviceResources->RegisterDeviceNotify(this);
+	DX::DeviceResources::Instance()->RegisterDeviceNotify(this);
 }
 
 // Initialize the Direct3D resources required to run.
 void Game::Initialize(HWND window, int width, int height)
 {
-	m_deviceResources->SetWindow(window, width, height);
+	DX::DeviceResources::Instance()->SetWindow(window, width, height);
 
-	m_deviceResources->CreateDeviceResources();
+	DX::DeviceResources::Instance()->CreateDeviceResources();
 	CreateDeviceDependentResources();
 
-	m_deviceResources->CreateWindowSizeDependentResources();
+	DX::DeviceResources::Instance()->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
@@ -66,37 +65,37 @@ void Game::Render()
 
 	Clear();
 
-	m_deviceResources->PIXBeginEvent(L"Render");
-	auto context = m_deviceResources->GetD3DDeviceContext();
+	DX::DeviceResources::Instance()->PIXBeginEvent(L"Render");
+	auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
 
 	// TODO: Add your rendering code here.
 	context;
 
-	m_deviceResources->PIXEndEvent();
+	DX::DeviceResources::Instance()->PIXEndEvent();
 
 	// Show the new frame.
-	m_deviceResources->Present();
+	DX::DeviceResources::Instance()->Present();
 }
 
 // Helper method to clear the back buffers.
 void Game::Clear()
 {
-	m_deviceResources->PIXBeginEvent(L"Clear");
+	DX::DeviceResources::Instance()->PIXBeginEvent(L"Clear");
 
 	// Clear the views.
-	auto context = m_deviceResources->GetD3DDeviceContext();
-	auto renderTarget = m_deviceResources->GetRenderTargetView();
-	auto depthStencil = m_deviceResources->GetDepthStencilView();
+	auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
+	auto renderTarget = DX::DeviceResources::Instance()->GetRenderTargetView();
+	auto depthStencil = DX::DeviceResources::Instance()->GetDepthStencilView();
 
 	context->ClearRenderTargetView(renderTarget, Colors::CornflowerBlue);
 	context->ClearDepthStencilView(depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	context->OMSetRenderTargets(1, &renderTarget, depthStencil);
 
 	// Set the viewport.
-	auto viewport = m_deviceResources->GetScreenViewport();
+	auto viewport = DX::DeviceResources::Instance()->GetScreenViewport();
 	context->RSSetViewports(1, &viewport);
 
-	m_deviceResources->PIXEndEvent();
+	DX::DeviceResources::Instance()->PIXEndEvent();
 }
 #pragma endregion
 
@@ -126,13 +125,13 @@ void Game::OnResuming()
 
 void Game::OnWindowMoved()
 {
-	auto r = m_deviceResources->GetOutputSize();
-	m_deviceResources->WindowSizeChanged(r.right, r.bottom);
+	auto r = DX::DeviceResources::Instance()->GetOutputSize();
+	DX::DeviceResources::Instance()->WindowSizeChanged(r.right, r.bottom);
 }
 
 void Game::OnWindowSizeChanged(int width, int height)
 {
-	if (!m_deviceResources->WindowSizeChanged(width, height))
+	if (!DX::DeviceResources::Instance()->WindowSizeChanged(width, height))
 		return;
 
 	CreateWindowSizeDependentResources();
@@ -153,7 +152,7 @@ void Game::GetDefaultSize(int& width, int& height) const noexcept
 // These are the resources that depend on the device.
 void Game::CreateDeviceDependentResources()
 {
-	auto device = m_deviceResources->GetD3DDevice();
+	auto device = DX::DeviceResources::Instance()->GetD3DDevice();
 
 	// TODO: Initialize device dependent objects here (independent of window size).
 	device;
