@@ -2,8 +2,8 @@
 // Main.cpp
 //
 
-#include "pch.h"
-#include "Game.h"
+#include "Source/pch.h"
+#include "Source/Game.h"
 
 using namespace DirectX;
 
@@ -25,7 +25,8 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void ExitGame() noexcept;
 
 // Indicates to hybrid graphics systems to prefer the discrete part by default
-extern "C" {
+extern "C"
+{
 __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
@@ -65,7 +66,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		int w, h;
 		g_game->GetDefaultSize(w, h);
 
-		RECT rc = {0, 0, static_cast<LONG>(w), static_cast<LONG>(h)};
+		RECT rc = { 0, 0, static_cast<LONG>(w), static_cast<LONG>(h) };
 
 		AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
 

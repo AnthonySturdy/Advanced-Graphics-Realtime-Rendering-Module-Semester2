@@ -1,13 +1,9 @@
-//
-// Game.h
-//
-
 #pragma once
 
-#include "DeviceResources.h"
-#include "StepTimer.h"
-#include "GameObject.h"
+#include "Source/Utility/StepTimer.h"
 
+#include "Source/Game/GameObject.h"
+#include "Source/Rendering/RenderPass.h"
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
@@ -55,4 +51,7 @@ private:
 
 	// Rendering loop timer.
 	DX::StepTimer m_timer;
+
+	std::vector<GameObject> GameObjects{};
+	std::vector<std::shared_ptr<RenderPass>> RenderPipeline{};
 };

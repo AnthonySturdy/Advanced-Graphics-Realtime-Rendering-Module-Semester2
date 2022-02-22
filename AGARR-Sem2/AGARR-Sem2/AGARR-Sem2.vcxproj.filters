@@ -10,24 +10,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="StepTimer.h">
+    <ClInclude Include="Source\pch.h" />
+    <ClInclude Include="Source\Game.h" />
+    <ClInclude Include="Source\Utility\StepTimer.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="DeviceResources.h">
+    <ClInclude Include="Source\Core\DeviceResources.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="Source\Game\GameObject.h" />
+    <ClInclude Include="Source\Rendering\RenderPass.h" />
+    <ClInclude Include="Source\Game\Components\TransformComponent.h" />
+    <ClInclude Include="Source\Rendering\RenderPassGeometry.h" />
+    <ClInclude Include="Source\Game\Components\MeshRendererComponent.h" />
+    <ClInclude Include="Source\Rendering\Mesh.h" />
+    <ClInclude Include="Source\Rendering\Shader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="DeviceResources.cpp">
+    <ClCompile Include="Source\pch.cpp" />
+    <ClCompile Include="Source\Game.cpp" />
+    <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Core\DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="Source\Game\GameObject.cpp" />
+    <ClCompile Include="Source\Rendering\RenderPass.cpp" />
+    <ClCompile Include="Source\Game\Components\TransformComponent.cpp" />
+    <ClCompile Include="Source\Rendering\RenderPassGeometry.cpp" />
+    <ClCompile Include="Source\Game\Components\MeshRendererComponent.cpp" />
+    <ClCompile Include="Source\Rendering\Mesh.cpp" />
+    <ClCompile Include="Source\Rendering\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -41,5 +53,9 @@
     <Manifest Include="settings.manifest">
       <Filter>Assets</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Source\Rendering\Shaders\PixelShader.hlsl" />
+    <FxCompile Include="Source\Rendering\Shaders\VertexShader.hlsl" />
   </ItemGroup>
 </Project>

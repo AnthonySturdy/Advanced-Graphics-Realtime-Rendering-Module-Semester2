@@ -1,9 +1,8 @@
-//
-// Game.cpp
-//
+#include "Source/pch.h"
+#include "Source/Game.h"
 
-#include "pch.h"
-#include "Game.h"
+#include "Source/Game/Components/TransformComponent.h"
+#include "Source/Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
 
@@ -27,12 +26,14 @@ void Game::Initialize(HWND window, int width, int height)
 	DX::DeviceResources::Instance()->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 
-	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
-	// e.g. for 60 FPS fixed timestep update logic, call:
-	/*
+	// Create and Initialise render pipeline
+	RenderPipeline.push_back(std::make_unique<RenderPassGeometry>(GameObjects));
+	for (auto& rp : RenderPipeline)
+		rp->Initialise();
+
+	// Vsync
 	m_timer.SetFixedTimeStep(true);
 	m_timer.SetTargetElapsedSeconds(1.0 / 60);
-	*/
 }
 
 #pragma region Frame Update
@@ -49,7 +50,10 @@ void Game::Tick()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
-	float elapsedTime = float(timer.GetElapsedSeconds());
+	const float elapsedTime = static_cast<float>(timer.GetElapsedSeconds());
+
+	for (auto& go : GameObjects)
+		go.Update(elapsedTime);
 }
 #pragma endregion
 
@@ -66,10 +70,9 @@ void Game::Render()
 	Clear();
 
 	DX::DeviceResources::Instance()->PIXBeginEvent(L"Render");
-	auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
 
-	// TODO: Add your rendering code here.
-	context;
+	for (auto& rp : RenderPipeline)
+		rp->Render();
 
 	DX::DeviceResources::Instance()->PIXEndEvent();
 
@@ -83,16 +86,16 @@ void Game::Clear()
 	DX::DeviceResources::Instance()->PIXBeginEvent(L"Clear");
 
 	// Clear the views.
-	auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
-	auto renderTarget = DX::DeviceResources::Instance()->GetRenderTargetView();
-	auto depthStencil = DX::DeviceResources::Instance()->GetDepthStencilView();
+	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
+	const auto renderTarget = DX::DeviceResources::Instance()->GetRenderTargetView();
+	const auto depthStencil = DX::DeviceResources::Instance()->GetDepthStencilView();
 
 	context->ClearRenderTargetView(renderTarget, Colors::CornflowerBlue);
 	context->ClearDepthStencilView(depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	context->OMSetRenderTargets(1, &renderTarget, depthStencil);
 
 	// Set the viewport.
-	auto viewport = DX::DeviceResources::Instance()->GetScreenViewport();
+	const auto viewport = DX::DeviceResources::Instance()->GetScreenViewport();
 	context->RSSetViewports(1, &viewport);
 
 	DX::DeviceResources::Instance()->PIXEndEvent();

@@ -17,24 +17,25 @@ public:
 	Component& operator=(Component&&) = default;
 	virtual ~Component() = default;
 
-	virtual void Update() = 0;
+	virtual void Update(float deltaTime) = 0;
 	virtual void Render() = 0;
 
 private:
 	GameObject* Parent{ nullptr };
+	bool Removable{ true };
 };
 
 class GameObject final
 {
 public:
-	GameObject() = default;
+	GameObject();
 	GameObject(const GameObject&) = default;
 	GameObject(GameObject&&) = default;
 	GameObject& operator=(const GameObject&) = default;
 	GameObject& operator=(GameObject&&) = default;
 	~GameObject() = default;
 
-	void Update();
+	void Update(float deltaTime);
 	void Render();
 
 	template <typename T> requires std::is_base_of_v<Component, T>
@@ -43,7 +44,7 @@ public:
 		const auto type = std::type_index(typeid(T));
 
 		if (!Components.contains(type))
-			throw std::invalid_argument("Component does not exist");
+			return nullptr;
 
 		return reinterpret_cast<T*>(Components.at(type)[0].get());
 	}
@@ -54,7 +55,7 @@ public:
 		const auto type = std::type_index(typeid(T));
 
 		if (!Components.contains(type))
-			throw std::invalid_argument("Component does not exist");
+			return std::vector<T*>();
 
 		std::vector<T*> rawPtrList;
 		rawPtrList.reserve(Components.at(type).size());
@@ -77,6 +78,9 @@ public:
 	{
 		const auto type = std::type_index(typeid(T));
 
+		if (!component->Removable)
+			throw std::invalid_argument("The component requested for removal is set as irremovable");
+
 		if (!Components.contains(type))
 			throw std::invalid_argument("No components of specified type are assigned to this GameObject");
 
@@ -91,14 +95,35 @@ public:
 			}
 		}
 
-		throw std::invalid_argument("The specific component requested for removal is not assigned to this GameObject");
+		throw std::invalid_argument("The component requested for removal is not assigned to this GameObject");
 	}
 
 	template <typename T> requires std::is_base_of_v<Component, T>
-	[[nodiscard]] bool HasComponent() const
+	[[nodiscard]] static std::vector<T*> FindComponents(std::vector<GameObject>& gameObjects)
 	{
-		return Components.contains(std::type_index(typeid(T)));
+		std::vector<T*> returnComponents{};
+
+		for (auto& go : gameObjects)
+		{
+			std::vector<T*> goComps = go.GetComponents<T>();
+			if (goComps.size() != 0)
+				returnComponents.insert(returnComponents.end(), goComps.begin(), goComps.end());
+		}
+
+		return returnComponents;
 	}
+
+	template <typename T> requires std::is_base_of_v<Component, T>
+	[[nodiscard]] static T* FindComponent(std::vector<GameObject>& gameObjects)
+	{
+		std::vector<T*> c = FindComponents<T>(gameObjects);
+
+		if (c.size() == 0)
+			return nullptr;
+
+		return c[0];
+	}
+
 
 private:
 	std::unordered_map<std::type_index, std::vector<std::shared_ptr<Component>>> Components{};

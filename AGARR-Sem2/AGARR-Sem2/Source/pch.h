@@ -35,6 +35,7 @@
 
 #include <d3d11_1.h>
 #include <dxgi1_6.h>
+#include <d3dcompiler.h>
 
 #include <DirectXMath.h>
 #include <DirectXColors.h>
@@ -51,6 +52,8 @@
 #include <memory>
 #include <stdexcept>
 
+#include "Core/DeviceResources.h"
+
 #ifdef _DEBUG
 #include <dxgidebug.h>
 #endif
@@ -61,9 +64,7 @@ namespace DX
 	class com_exception : public std::exception
 	{
 	public:
-		com_exception(HRESULT hr) noexcept : result(hr)
-		{
-		}
+		com_exception(HRESULT hr) noexcept : result(hr) { }
 
 		const char* what() const override
 		{
