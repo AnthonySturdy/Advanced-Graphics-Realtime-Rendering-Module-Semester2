@@ -1,9 +1,9 @@
-#include "Source/pch.h"
-#include "Source/Rendering/RenderPassGeometry.h"
+#include "pch.h"
+#include "Rendering/RenderPassGeometry.h"
 
-#include "Source/Game/GameObject.h"
+#include "Game/GameObject.h"
 
-RenderPassGeometry::RenderPassGeometry(std::vector<GameObject>& gameObjects)
+RenderPassGeometry::RenderPassGeometry(std::vector<GameObject*>& gameObjects)
 	: GameObjects(gameObjects) {}
 
 void RenderPassGeometry::Initialise()
@@ -83,8 +83,8 @@ void RenderPassGeometry::Render()
 	context->RSSetState(RenderState.Get());
 
 	// Render GameObjects
-	for (auto& go : GameObjects)
-		go.Render();
+	for (const auto go : GameObjects)
+		go->Render();
 
 	// Unbind render targets
 	ID3D11RenderTargetView* nullRtv = nullptr;

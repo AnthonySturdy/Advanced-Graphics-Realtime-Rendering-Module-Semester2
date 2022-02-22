@@ -1,8 +1,10 @@
-#include "Source/pch.h"
-#include "Source/Game.h"
+#include "pch.h"
+#include "Game.h"
 
-#include "Source/Game/Components/TransformComponent.h"
-#include "Source/Rendering/RenderPassGeometry.h"
+#include "Game/Components/CameraComponent.h"
+#include "Game/Components/MeshRendererComponent.h"
+#include "Game/Components/TransformComponent.h"
+#include "Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
 
@@ -26,10 +28,41 @@ void Game::Initialize(HWND window, int width, int height)
 	DX::DeviceResources::Instance()->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 
+	// Initialise ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+
+	ImGui::StyleColorsDark();
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
+
+	ImGui_ImplWin32_Init(window);
+	ImGui_ImplDX11_Init(DX::DeviceResources::Instance()->GetD3DDevice(), DX::DeviceResources::Instance()->GetD3DDeviceContext());
+
 	// Create and Initialise render pipeline
 	RenderPipeline.push_back(std::make_unique<RenderPassGeometry>(GameObjects));
 	for (auto& rp : RenderPipeline)
 		rp->Initialise();
+
+	// Create GameObjects
+	GameObjects.push_back(new GameObject());
+	const auto cam = GameObjects[0];
+	cam->AddComponent<CameraComponent>(new CameraComponent());
+	TransformComponent* camTransf = cam->GetComponent<TransformComponent>();
+	camTransf->SetPosition(SimpleMath::Vector3(-2.0f, 5.0f, 5.0f));
+
+	GameObjects.push_back(new GameObject());
+	const auto cube = GameObjects[1];
+	cube->AddComponent<MeshRendererComponent>(new MeshRendererComponent());
 
 	// Vsync
 	m_timer.SetFixedTimeStep(true);
@@ -53,7 +86,7 @@ void Game::Update(DX::StepTimer const& timer)
 	const float elapsedTime = static_cast<float>(timer.GetElapsedSeconds());
 
 	for (auto& go : GameObjects)
-		go.Update(elapsedTime);
+		go->Update(elapsedTime);
 }
 #pragma endregion
 
@@ -67,12 +100,34 @@ void Game::Render()
 		return;
 	}
 
-	Clear();
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
 	DX::DeviceResources::Instance()->PIXBeginEvent(L"Render");
 
 	for (const auto& rp : RenderPipeline)
 		rp->Render();
+
+	ClearAndSetRenderTarget();
+
+	ImGui::DockSpaceOverViewport();
+
+	ImGui::Begin("Test");
+	ImGui::Image(reinterpret_cast<RenderPassGeometry*>(RenderPipeline[0].get())->GetSRV(),
+	             ImGui::GetContentRegionAvail());
+	ImGui::End();
+
+	// Render ImGui
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
 
 	DX::DeviceResources::Instance()->PIXEndEvent();
 
@@ -81,7 +136,7 @@ void Game::Render()
 }
 
 // Helper method to clear the back buffers.
-void Game::Clear()
+void Game::ClearAndSetRenderTarget()
 {
 	DX::DeviceResources::Instance()->PIXBeginEvent(L"Clear");
 

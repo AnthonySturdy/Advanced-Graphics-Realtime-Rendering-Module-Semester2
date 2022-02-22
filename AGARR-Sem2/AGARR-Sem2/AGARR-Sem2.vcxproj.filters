@@ -25,7 +25,17 @@
     <ClInclude Include="Source\Game\Components\MeshRendererComponent.h" />
     <ClInclude Include="Source\Rendering\Mesh.h" />
     <ClInclude Include="Source\Rendering\Shader.h" />
-    <ClInclude Include="CameraComponent.h" />
+    <ClInclude Include="Source\Game\Components\CameraComponent.h" />
+    <ClInclude Include="External\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="External\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="External\imgui\misc\cpp\imgui_stdlib.h" />
+    <ClInclude Include="External\imgui\misc\single_file\imgui_single_file.h" />
+    <ClInclude Include="External\imgui\imconfig.h" />
+    <ClInclude Include="External\imgui\imgui.h" />
+    <ClInclude Include="External\imgui\imgui_internal.h" />
+    <ClInclude Include="External\imgui\imstb_rectpack.h" />
+    <ClInclude Include="External\imgui\imstb_textedit.h" />
+    <ClInclude Include="External\imgui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\pch.cpp" />
@@ -41,7 +51,16 @@
     <ClCompile Include="Source\Game\Components\MeshRendererComponent.cpp" />
     <ClCompile Include="Source\Rendering\Mesh.cpp" />
     <ClCompile Include="Source\Rendering\Shader.cpp" />
-    <ClCompile Include="CameraComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\CameraComponent.cpp" />
+    <ClCompile Include="External\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="External\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="External\imgui\misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="External\imgui\misc\fonts\binary_to_compressed_c.cpp" />
+    <ClCompile Include="External\imgui\imgui.cpp" />
+    <ClCompile Include="External\imgui\imgui_demo.cpp" />
+    <ClCompile Include="External\imgui\imgui_draw.cpp" />
+    <ClCompile Include="External\imgui\imgui_tables.cpp" />
+    <ClCompile Include="External\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

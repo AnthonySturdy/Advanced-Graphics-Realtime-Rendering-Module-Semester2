@@ -1,5 +1,5 @@
 #pragma once
-#include "Source/Game/GameObject.h"
+#include "Game/GameObject.h"
 
 class TransformComponent final : public Component
 {

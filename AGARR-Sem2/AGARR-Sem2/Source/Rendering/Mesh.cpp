@@ -1,4 +1,4 @@
-#include "Source/pch.h"
+#include "pch.h"
 #include "Mesh.h"
 
 using namespace DirectX::SimpleMath;

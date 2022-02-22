@@ -1,12 +1,12 @@
 #pragma once
-#include "Source/Rendering/RenderPass.h"
+#include "Rendering/RenderPass.h"
 
 class GameObject;
 
 class RenderPassGeometry : public RenderPass
 {
 public:
-	RenderPassGeometry(std::vector<GameObject>& gameObjects);
+	RenderPassGeometry(std::vector<GameObject*>& gameObjects);
 	RenderPassGeometry(const RenderPassGeometry&) = default;
 	RenderPassGeometry(RenderPassGeometry&&) = default;
 	RenderPassGeometry& operator=(const RenderPassGeometry&) = delete;
@@ -16,8 +16,10 @@ public:
 	void Initialise() override;
 	void Render() override;
 
+	[[nodiscard]] ID3D11ShaderResourceView* GetSRV() const { return RenderTargetSRV.Get(); }
+
 private:
-	std::vector<GameObject>& GameObjects;
+	std::vector<GameObject*>& GameObjects;
 
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RenderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView;

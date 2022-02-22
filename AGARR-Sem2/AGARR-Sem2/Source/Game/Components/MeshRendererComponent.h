@@ -1,12 +1,17 @@
 #pragma once
-#include "Source/Game/GameObject.h"
-#include "Source/Rendering/Mesh.h"
-#include "Source/Rendering/Shader.h"
+#include "Game/GameObject.h"
+#include "Rendering/Mesh.h"
+#include "Rendering/Shader.h"
 
 class MeshRendererComponent : public Component
 {
+	struct PerObjectConstantBuffer
+	{
+		DirectX::SimpleMath::Matrix World{ DirectX::SimpleMath::Matrix::Identity };
+	};
+
 public:
-	MeshRendererComponent() = default;
+	MeshRendererComponent();
 	MeshRendererComponent(const MeshRendererComponent&) = default;
 	MeshRendererComponent(MeshRendererComponent&&) = default;
 	MeshRendererComponent& operator=(const MeshRendererComponent&) = default;
@@ -17,6 +22,10 @@ public:
 	void Render() override;
 
 private:
+	void CreateConstantBuffer();
+
 	std::shared_ptr<Mesh> MeshData{ nullptr };
 	std::shared_ptr<Shader> MeshShader{ nullptr };
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };
