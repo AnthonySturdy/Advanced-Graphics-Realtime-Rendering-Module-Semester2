@@ -18,6 +18,8 @@ public:
 	[[nodiscard]] DirectX::SimpleMath::Vector3 GetRotation() const { return Rotation; }
 	[[nodiscard]] DirectX::SimpleMath::Vector3 GetScale() const { return Scale; }
 
+	[[nodiscard]] DirectX::SimpleMath::Matrix GetWorldMatrix() const;
+
 	void SetPosition(DirectX::SimpleMath::Vector3 val) { Position = val; }
 	void SetRotation(DirectX::SimpleMath::Vector3 val) { Rotation = val; }
 	void SetScale(DirectX::SimpleMath::Vector3 val) { Scale = val; }

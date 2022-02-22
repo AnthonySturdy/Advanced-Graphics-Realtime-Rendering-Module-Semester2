@@ -71,7 +71,7 @@ void Game::Render()
 
 	DX::DeviceResources::Instance()->PIXBeginEvent(L"Render");
 
-	for (auto& rp : RenderPipeline)
+	for (const auto& rp : RenderPipeline)
 		rp->Render();
 
 	DX::DeviceResources::Instance()->PIXEndEvent();

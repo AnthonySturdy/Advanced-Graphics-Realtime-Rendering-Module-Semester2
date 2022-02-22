@@ -18,4 +18,10 @@ public:
 
 private:
 	std::vector<GameObject>& GameObjects;
+
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RenderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RenderState;
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> RenderTargetSRV;
 };

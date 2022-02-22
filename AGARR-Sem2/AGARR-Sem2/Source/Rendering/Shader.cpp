@@ -28,11 +28,11 @@ Shader::Shader()
 	                                            PixelShader.ReleaseAndGetAddressOf()));
 
 	// Create the input layout
-	DX::ThrowIfFailed(device->CreateInputLayout(InputLayout,
+	DX::ThrowIfFailed(device->CreateInputLayout(InputLayoutDesc,
 	                                            InLayoutNumElements,
 	                                            vsBlob->GetBufferPointer(),
 	                                            vsBlob->GetBufferSize(),
-	                                            VertexLayout.ReleaseAndGetAddressOf()));
+	                                            InputLayout.ReleaseAndGetAddressOf()));
 
 	// Release blobs
 	vsBlob->Release();
