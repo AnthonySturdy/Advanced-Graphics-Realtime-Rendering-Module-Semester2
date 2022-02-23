@@ -19,8 +19,11 @@ public:
 
 	virtual void Update(float deltaTime) = 0;
 	virtual void Render() = 0;
+	virtual void RenderGUI() = 0;
 
 protected:
+	[[nodiscard]] virtual std::string GetComponentName() const { return "Untitled Component"; }
+
 	GameObject* Parent{ nullptr };
 
 private:
@@ -39,6 +42,7 @@ public:
 
 	void Update(float deltaTime);
 	void Render();
+	void RenderGUI();
 
 	template <typename T> requires std::is_base_of_v<Component, T>
 	[[nodiscard]] T* GetComponent()
@@ -68,7 +72,7 @@ public:
 	}
 
 	template <typename T> requires std::is_base_of_v<Component, T>
-	T* AddComponent(Component* component)
+	T* AddComponent(T* component)
 	{
 		component->Parent = this;
 		Components[std::type_index(typeid(T))].push_back(std::shared_ptr<Component>(component));

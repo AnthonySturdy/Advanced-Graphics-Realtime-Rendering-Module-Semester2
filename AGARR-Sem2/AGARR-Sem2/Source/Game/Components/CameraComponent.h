@@ -20,6 +20,7 @@ public:
 
 	void Update(float deltaTime) override {};
 	void Render() override;
+	void RenderGUI() override;
 
 	[[nodiscard]] float GetFOV() const { return FOV; }
 	[[nodiscard]] float GetNearPlane() const { return NearPlane; }
@@ -32,6 +33,9 @@ public:
 	void SetFOV(float val) { FOV = val; }
 	void SetNearPlane(float val) { NearPlane = val; }
 	void SetFarPlane(float val) { FarPlane = val; }
+
+protected:
+	[[nodiscard]] std::string GetComponentName() const override { return "Camera"; }
 
 private:
 	void CreateConstantBuffer();

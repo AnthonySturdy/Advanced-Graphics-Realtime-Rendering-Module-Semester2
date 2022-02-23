@@ -91,3 +91,13 @@ void RenderPassGeometry::Render()
 	ID3D11DepthStencilView* nullDsv = nullptr;
 	context->OMSetRenderTargets(1, &nullRtv, nullDsv);
 }
+
+void RenderPassGeometry::RenderGUI()
+{
+	ImGui::Begin("Scene View");
+
+	for (const auto go : GameObjects)
+		go->RenderGUI();
+
+	ImGui::End();
+}

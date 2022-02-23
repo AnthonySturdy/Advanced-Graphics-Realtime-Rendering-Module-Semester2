@@ -20,6 +20,10 @@ public:
 
 	void Update(float deltaTime) override;
 	void Render() override;
+	void RenderGUI() override;
+
+protected:
+	[[nodiscard]] std::string GetComponentName() const override { return "Mesh Renderer"; }
 
 private:
 	void CreateConstantBuffer();

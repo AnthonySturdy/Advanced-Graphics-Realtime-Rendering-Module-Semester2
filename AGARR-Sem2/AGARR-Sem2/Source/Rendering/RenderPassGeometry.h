@@ -15,6 +15,7 @@ public:
 
 	void Initialise() override;
 	void Render() override;
+	void RenderGUI() override;
 
 	[[nodiscard]] ID3D11ShaderResourceView* GetSRV() const { return RenderTargetSRV.Get(); }
 

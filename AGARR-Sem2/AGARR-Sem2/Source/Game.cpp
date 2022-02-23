@@ -56,13 +56,13 @@ void Game::Initialize(HWND window, int width, int height)
 	// Create GameObjects
 	GameObjects.push_back(new GameObject());
 	const auto cam = GameObjects[0];
-	cam->AddComponent<CameraComponent>(new CameraComponent());
+	cam->AddComponent(new CameraComponent());
 	TransformComponent* camTransf = cam->GetComponent<TransformComponent>();
 	camTransf->SetPosition(SimpleMath::Vector3(-2.0f, 5.0f, 5.0f));
 
 	GameObjects.push_back(new GameObject());
 	const auto cube = GameObjects[1];
-	cube->AddComponent<MeshRendererComponent>(new MeshRendererComponent());
+	cube->AddComponent(new MeshRendererComponent());
 
 	// Vsync
 	m_timer.SetFixedTimeStep(true);
@@ -111,14 +111,18 @@ void Game::Render()
 
 	ClearAndSetRenderTarget();
 
+	// GUI Calls
 	ImGui::DockSpaceOverViewport();
 
-	ImGui::Begin("Test");
+	ImGui::Begin("Viewport");
 	ImGui::Image(reinterpret_cast<RenderPassGeometry*>(RenderPipeline[0].get())->GetSRV(),
 	             ImGui::GetContentRegionAvail());
 	ImGui::End();
 
-	// Render ImGui
+	for (const auto& rp : RenderPipeline)
+		rp->RenderGUI();
+
+	// Render ImGui to backbuffer
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	ImGuiIO& io = ImGui::GetIO();

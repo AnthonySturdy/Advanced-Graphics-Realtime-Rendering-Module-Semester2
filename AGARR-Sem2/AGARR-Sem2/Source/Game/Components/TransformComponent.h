@@ -13,6 +13,7 @@ public:
 
 	void Update(float deltaTime) override {};
 	void Render() override {};
+	void RenderGUI() override;
 
 	[[nodiscard]] DirectX::SimpleMath::Vector3 GetPosition() const { return Position; }
 	[[nodiscard]] DirectX::SimpleMath::Vector3 GetRotation() const { return Rotation; }
@@ -23,6 +24,9 @@ public:
 	void SetPosition(DirectX::SimpleMath::Vector3 val) { Position = val; }
 	void SetRotation(DirectX::SimpleMath::Vector3 val) { Rotation = val; }
 	void SetScale(DirectX::SimpleMath::Vector3 val) { Scale = val; }
+
+protected:
+	[[nodiscard]] std::string GetComponentName() const override { return "Transform"; }
 
 private:
 	DirectX::SimpleMath::Vector3 Position{ DirectX::SimpleMath::Vector3::Zero };

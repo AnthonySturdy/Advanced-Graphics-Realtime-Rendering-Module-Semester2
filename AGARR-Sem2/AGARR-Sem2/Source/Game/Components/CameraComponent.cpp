@@ -44,6 +44,13 @@ void CameraComponent::Render()
 	context->VSSetConstantBuffers(0, 1, ConstantBuffer.GetAddressOf());
 }
 
+void CameraComponent::RenderGUI()
+{
+	ImGui::SliderFloat("FOV", &FOV, 1.0f * 0.0174533, 160.0f * 0.0174533);
+	ImGui::DragFloat("Near Plane", &NearPlane, 0.001f, 0.001f, FarPlane - 0.001f);
+	ImGui::DragFloat("Far Plane", &FarPlane, 0.001f, NearPlane + 0.001f, 5000.0f);
+}
+
 DirectX::SimpleMath::Matrix CameraComponent::GetViewMatrix() const
 {
 	const TransformComponent* transform = Parent->GetComponent<TransformComponent>();
