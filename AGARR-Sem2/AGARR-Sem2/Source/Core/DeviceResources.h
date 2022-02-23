@@ -53,6 +53,10 @@ namespace DX
 
 		// Device Accessors.
 		RECT GetOutputSize() const noexcept { return m_outputSize; }
+		float GetOutputAspectRatio() const noexcept { return GetOutputSize().right / static_cast<float>(GetOutputSize().bottom); }
+		void SetViewportSize(RECT val) { m_viewportSize = val; }
+		RECT GetViewportSize() const noexcept { return m_viewportSize; }
+		float GetViewportAspectRatio() const noexcept { return GetViewportSize().right / static_cast<float>(GetViewportSize().bottom); }
 
 		// Direct3D Accessors.
 		auto GetD3DDevice() const noexcept { return m_d3dDevice.Get(); }
@@ -67,7 +71,8 @@ namespace DX
 		ID3D11DepthStencilView* GetDepthStencilView() const noexcept { return m_d3dDepthStencilView.Get(); }
 		DXGI_FORMAT GetBackBufferFormat() const noexcept { return m_backBufferFormat; }
 		DXGI_FORMAT GetDepthBufferFormat() const noexcept { return m_depthBufferFormat; }
-		D3D11_VIEWPORT GetScreenViewport() const noexcept { return m_screenViewport; }
+		D3D11_VIEWPORT GetScreenViewport() const noexcept { return CD3D11_VIEWPORT(0.0f, 0.0f, static_cast<float>(m_outputSize.right), static_cast<float>(m_outputSize.bottom)); }
+		D3D11_VIEWPORT GetWindowViewport() const noexcept { return CD3D11_VIEWPORT(0.0f, 0.0f, static_cast<float>(m_viewportSize.right), static_cast<float>(m_viewportSize.bottom)); }
 		UINT GetBackBufferCount() const noexcept { return m_backBufferCount; }
 		DXGI_COLOR_SPACE_TYPE GetColorSpace() const noexcept { return m_colorSpace; }
 		unsigned int GetDeviceOptions() const noexcept { return m_options; }
@@ -117,6 +122,7 @@ namespace DX
 		HWND m_window;
 		D3D_FEATURE_LEVEL m_d3dFeatureLevel;
 		RECT m_outputSize;
+		RECT m_viewportSize;
 
 		// HDR Support
 		DXGI_COLOR_SPACE_TYPE m_colorSpace;

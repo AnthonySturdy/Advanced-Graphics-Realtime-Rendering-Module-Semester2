@@ -85,7 +85,7 @@ void Game::Update(DX::StepTimer const& timer)
 {
 	const float elapsedTime = static_cast<float>(timer.GetElapsedSeconds());
 
-	for (auto& go : GameObjects)
+	for (const auto& go : GameObjects)
 		go->Update(elapsedTime);
 }
 #pragma endregion
@@ -106,6 +106,7 @@ void Game::Render()
 
 	DX::DeviceResources::Instance()->PIXBeginEvent(L"Render");
 
+	// Render pipeline stages
 	for (const auto& rp : RenderPipeline)
 		rp->Render();
 
@@ -114,10 +115,22 @@ void Game::Render()
 	// GUI Calls
 	ImGui::DockSpaceOverViewport();
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	ImGui::Begin("Viewport");
+	static RECT staticVpSize = { 0, 0, 0, 0 };
+	const RECT curVpSize = { 0, 0, static_cast<long>(ImGui::GetContentRegionAvail().x), static_cast<long>(ImGui::GetContentRegionAvail().y) };
+	if (staticVpSize != curVpSize)
+	{
+		staticVpSize = curVpSize;
+		DX::DeviceResources::Instance()->SetViewportSize(curVpSize);
+
+		for (const auto& rp : RenderPipeline)
+			rp->Initialise();
+	}
 	ImGui::Image(reinterpret_cast<RenderPassGeometry*>(RenderPipeline[0].get())->GetSRV(),
 	             ImGui::GetContentRegionAvail());
 	ImGui::End();
+	ImGui::PopStyleVar();
 
 	for (const auto& rp : RenderPipeline)
 		rp->RenderGUI();
@@ -205,8 +218,8 @@ void Game::OnWindowSizeChanged(int width, int height)
 void Game::GetDefaultSize(int& width, int& height) const noexcept
 {
 	// TODO: Change to desired default window size (note minimum size is 320x200).
-	width = 800;
-	height = 600;
+	width = 1280;
+	height = 720;
 }
 #pragma endregion
 

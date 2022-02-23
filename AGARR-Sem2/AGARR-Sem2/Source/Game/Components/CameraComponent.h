@@ -26,7 +26,6 @@ public:
 	[[nodiscard]] float GetNearPlane() const { return NearPlane; }
 	[[nodiscard]] float GetFarPlane() const { return FarPlane; }
 
-	[[nodiscard]] float GetAspectRatio() const { return DX::DeviceResources::Instance()->GetOutputSize().right / static_cast<float>(DX::DeviceResources::Instance()->GetOutputSize().bottom); }
 	[[nodiscard]] DirectX::SimpleMath::Matrix GetViewMatrix() const;
 	[[nodiscard]] DirectX::SimpleMath::Matrix GetProjectionMatrix() const;
 

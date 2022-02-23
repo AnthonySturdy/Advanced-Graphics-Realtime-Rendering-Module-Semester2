@@ -9,7 +9,7 @@ RenderPassGeometry::RenderPassGeometry(std::vector<GameObject*>& gameObjects)
 void RenderPassGeometry::Initialise()
 {
 	const auto device = DX::DeviceResources::Instance()->GetD3DDevice();
-	const auto outputSize = DX::DeviceResources::Instance()->GetOutputSize();
+	const auto outputSize = DX::DeviceResources::Instance()->GetViewportSize();
 
 	// Create render texture
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> rtvTex;
@@ -66,7 +66,7 @@ void RenderPassGeometry::Initialise()
 void RenderPassGeometry::Render()
 {
 	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
-	const auto outputSize = DX::DeviceResources::Instance()->GetOutputSize();
+	const auto outputSize = DX::DeviceResources::Instance()->GetViewportSize();
 
 	static constexpr DirectX::SimpleMath::Color clearColour(1.0f, 0.0f, 0.0f, 1.0f);
 	context->ClearRenderTargetView(RenderTargetView.Get(), &clearColour.x);

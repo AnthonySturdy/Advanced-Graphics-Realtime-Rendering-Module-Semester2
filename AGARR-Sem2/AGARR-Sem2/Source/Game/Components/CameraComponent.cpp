@@ -64,5 +64,5 @@ DirectX::SimpleMath::Matrix CameraComponent::GetViewMatrix() const
 
 DirectX::SimpleMath::Matrix CameraComponent::GetProjectionMatrix() const
 {
-	return DirectX::XMMatrixPerspectiveFovLH(FOV, GetAspectRatio(), NearPlane, FarPlane);
+	return DirectX::XMMatrixPerspectiveFovLH(FOV, DX::DeviceResources::Instance()->GetViewportAspectRatio(), NearPlane, FarPlane);
 }
