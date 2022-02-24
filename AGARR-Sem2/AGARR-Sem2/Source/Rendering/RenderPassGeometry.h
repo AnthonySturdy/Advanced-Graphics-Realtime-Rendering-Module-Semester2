@@ -24,7 +24,9 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RenderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DepthStencilView;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RenderState;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RenderStateFull;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> RenderStateWireframe;
+	bool RenderWireframe{ false };
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> RenderTargetSRV;
 };

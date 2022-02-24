@@ -39,9 +39,6 @@ void MeshRendererComponent::Render()
 	ID3D11Buffer* iBuf = MeshData->GetIndexBuffer();
 	context->IASetIndexBuffer(iBuf, DXGI_FORMAT_R16_UINT, 0);
 
-	// Set primitive topology
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 	// Draw object
 	context->DrawIndexed(MeshData->GetNumIndices(), 0, 0);
 }

@@ -50,12 +50,18 @@ void RenderPassGeometry::Initialise()
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
 	DX::ThrowIfFailed(device->CreateDepthStencilView(depthStencilTex.Get(), &depthStencilViewDesc, DepthStencilView.ReleaseAndGetAddressOf()));
 
-	// Create render state
+	// Create render states
 	D3D11_RASTERIZER_DESC renderStateDesc = {};
 	renderStateDesc.CullMode = D3D11_CULL_BACK;
 	renderStateDesc.FillMode = D3D11_FILL_SOLID;
 	renderStateDesc.DepthClipEnable = true;
-	DX::ThrowIfFailed(device->CreateRasterizerState(&renderStateDesc, RenderState.ReleaseAndGetAddressOf()));
+	DX::ThrowIfFailed(device->CreateRasterizerState(&renderStateDesc, RenderStateFull.ReleaseAndGetAddressOf()));
+
+	renderStateDesc = {};
+	renderStateDesc.CullMode = D3D11_CULL_NONE;
+	renderStateDesc.FillMode = D3D11_FILL_WIREFRAME;
+	renderStateDesc.DepthClipEnable = true;
+	DX::ThrowIfFailed(device->CreateRasterizerState(&renderStateDesc, RenderStateWireframe.ReleaseAndGetAddressOf()));
 
 	// Create SRV into RTV
 	Microsoft::WRL::ComPtr<ID3D11Resource> geometryPassResource;
@@ -68,7 +74,7 @@ void RenderPassGeometry::Render()
 	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
 	const auto outputSize = DX::DeviceResources::Instance()->GetViewportSize();
 
-	static constexpr DirectX::SimpleMath::Color clearColour(1.0f, 0.0f, 0.0f, 1.0f);
+	static constexpr DirectX::SimpleMath::Color clearColour(0.7f, 0.7f, 0.8f, 1.0f);
 	context->ClearRenderTargetView(RenderTargetView.Get(), &clearColour.x);
 	context->ClearDepthStencilView(DepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
@@ -80,7 +86,9 @@ void RenderPassGeometry::Render()
 	                               0.0f, 1.0f);
 	context->RSSetViewports(1, &viewport);
 
-	context->RSSetState(RenderState.Get());
+	context->RSSetState(RenderWireframe ? RenderStateWireframe.Get() : RenderStateFull.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Render GameObjects
 	for (const auto go : GameObjects)
@@ -99,5 +107,9 @@ void RenderPassGeometry::RenderGUI()
 	for (const auto go : GameObjects)
 		go->RenderGUI();
 
+	ImGui::End();
+
+	ImGui::Begin("Render Settings");
+	ImGui::Checkbox("Wireframe", &RenderWireframe);
 	ImGui::End();
 }
