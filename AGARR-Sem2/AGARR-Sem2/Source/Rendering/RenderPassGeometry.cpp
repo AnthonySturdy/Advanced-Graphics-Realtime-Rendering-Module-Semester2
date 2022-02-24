@@ -88,7 +88,7 @@ void RenderPassGeometry::Render()
 
 	context->RSSetState(RenderWireframe ? RenderStateWireframe.Get() : RenderStateFull.Get());
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 
 	// Render GameObjects
 	for (const auto go : GameObjects)

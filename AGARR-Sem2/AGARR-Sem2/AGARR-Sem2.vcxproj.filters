@@ -78,5 +78,7 @@
   <ItemGroup>
     <FxCompile Include="Source\Rendering\Shaders\PixelShader.hlsl" />
     <FxCompile Include="Source\Rendering\Shaders\VertexShader.hlsl" />
+    <FxCompile Include="Source\Rendering\Shaders\HullShader.hlsl" />
+    <FxCompile Include="Source\Rendering\Shaders\DomainShader.hlsl" />
   </ItemGroup>
 </Project>

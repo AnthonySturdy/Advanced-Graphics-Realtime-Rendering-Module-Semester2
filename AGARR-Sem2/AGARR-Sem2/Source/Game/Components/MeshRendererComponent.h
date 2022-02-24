@@ -8,6 +8,8 @@ class MeshRendererComponent : public Component
 	struct PerObjectConstantBuffer
 	{
 		DirectX::SimpleMath::Matrix World{ DirectX::SimpleMath::Matrix::Identity };
+		float TessellationAmount{ 1.0f };
+		float padding[3]{};
 	};
 
 public:
@@ -30,6 +32,7 @@ private:
 
 	std::shared_ptr<Mesh> MeshData{ nullptr };
 	std::shared_ptr<Shader> MeshShader{ nullptr };
+	float TessellationAmount{ 1.0f };
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };

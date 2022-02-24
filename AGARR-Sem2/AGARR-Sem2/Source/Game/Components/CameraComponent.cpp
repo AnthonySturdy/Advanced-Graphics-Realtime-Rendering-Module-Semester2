@@ -42,6 +42,7 @@ void CameraComponent::Render()
 	context->UpdateSubresource(ConstantBuffer.Get(), 0, nullptr, &ccb, 0, 0);
 
 	context->VSSetConstantBuffers(0, 1, ConstantBuffer.GetAddressOf());
+	context->DSSetConstantBuffers(0, 1, ConstantBuffer.GetAddressOf());
 }
 
 void CameraComponent::RenderGUI()

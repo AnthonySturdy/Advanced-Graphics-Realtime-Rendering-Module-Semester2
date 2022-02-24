@@ -19,6 +19,22 @@ Shader::Shader()
 	                                             nullptr,
 	                                             VertexShader.ReleaseAndGetAddressOf()));
 
+	// Read and create Hull shader
+	ID3DBlob* hsBlob = nullptr;
+	DX::ThrowIfFailed(D3DReadFileToBlob(L"Source/Rendering/Shaders/HullShader.cso", &hsBlob));
+	DX::ThrowIfFailed(device->CreateHullShader(hsBlob->GetBufferPointer(),
+	                                           hsBlob->GetBufferSize(),
+	                                           nullptr,
+	                                           HullShader.ReleaseAndGetAddressOf()));
+
+	// Read and create Domain shader
+	ID3DBlob* dsBlob = nullptr;
+	DX::ThrowIfFailed(D3DReadFileToBlob(L"Source/Rendering/Shaders/DomainShader.cso", &dsBlob));
+	DX::ThrowIfFailed(device->CreateDomainShader(dsBlob->GetBufferPointer(),
+	                                             dsBlob->GetBufferSize(),
+	                                             nullptr,
+	                                             DomainShader.ReleaseAndGetAddressOf()));
+
 	// Read and create Pixel shader
 	ID3DBlob* psBlob = nullptr;
 	DX::ThrowIfFailed(D3DReadFileToBlob(L"Source/Rendering/Shaders/PixelShader.cso", &psBlob));

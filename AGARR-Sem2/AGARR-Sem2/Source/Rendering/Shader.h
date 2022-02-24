@@ -13,11 +13,15 @@ public:
 	~Shader() = default;
 
 	[[nodiscard]] ID3D11VertexShader* GetVertexShader() const { return VertexShader.Get(); }
+	[[nodiscard]] ID3D11HullShader* GetHullShader() const { return HullShader.Get(); }
+	[[nodiscard]] ID3D11DomainShader* GetDomainShader() const { return DomainShader.Get(); }
 	[[nodiscard]] ID3D11PixelShader* GetPixelShader() const { return PixelShader.Get(); }
 	[[nodiscard]] ID3D11InputLayout* GetInputLayout() const { return InputLayout.Get(); }
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
+	Microsoft::WRL::ComPtr<ID3D11HullShader> HullShader;
+	Microsoft::WRL::ComPtr<ID3D11DomainShader> DomainShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
 

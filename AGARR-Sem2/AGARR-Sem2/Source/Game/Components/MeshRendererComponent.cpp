@@ -19,12 +19,17 @@ void MeshRendererComponent::Render()
 	// Update and bind constant buffer
 	static PerObjectConstantBuffer pocb = {};
 	pocb.World = XMMatrixTranspose(Parent->GetComponent<TransformComponent>()->GetWorldMatrix());
-
+	pocb.TessellationAmount = TessellationAmount;
 	context->UpdateSubresource(ConstantBuffer.Get(), 0, nullptr, &pocb, 0, 0);
+
 	context->VSSetConstantBuffers(1, 1, ConstantBuffer.GetAddressOf());
+	context->HSSetConstantBuffers(1, 1, ConstantBuffer.GetAddressOf());
+	context->DSSetConstantBuffers(1, 1, ConstantBuffer.GetAddressOf());
 
 	// Bind shaders
 	context->VSSetShader(MeshShader->GetVertexShader(), nullptr, 0);
+	context->HSSetShader(MeshShader->GetHullShader(), nullptr, 0);
+	context->DSSetShader(MeshShader->GetDomainShader(), nullptr, 0);
 	context->PSSetShader(MeshShader->GetPixelShader(), nullptr, 0);
 
 	// Bind input layout
@@ -46,6 +51,7 @@ void MeshRendererComponent::Render()
 void MeshRendererComponent::RenderGUI()
 {
 	ImGui::Text("TODO: Implement model loading / mesh generation options");
+	ImGui::SliderFloat("Tessellation Amount", &TessellationAmount, 1.0f, 32.0f);
 }
 
 void MeshRendererComponent::CreateConstantBuffer()
