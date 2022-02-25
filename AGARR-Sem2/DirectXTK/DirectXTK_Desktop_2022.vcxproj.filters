@@ -120,6 +120,7 @@
     <ClInclude Include="Inc\BufferHelpers.h">
       <Filter>Inc</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\WaveFrontReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Src\CommonStates.cpp">

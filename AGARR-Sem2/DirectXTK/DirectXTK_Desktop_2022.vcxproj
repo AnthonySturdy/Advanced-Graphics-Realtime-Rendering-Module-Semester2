@@ -38,6 +38,7 @@
     <ClInclude Include="Inc\PrimitiveBatch.h" />
     <ClInclude Include="Inc\SpriteFont.h" />
     <ClInclude Include="Inc\VertexTypes.h" />
+    <ClInclude Include="Inc\WaveFrontReader.h" />
     <ClInclude Include="Inc\WICTextureLoader.h" />
     <ClInclude Include="Src\AlignedNew.h" />
     <ClInclude Include="Src\Bezier.h" />

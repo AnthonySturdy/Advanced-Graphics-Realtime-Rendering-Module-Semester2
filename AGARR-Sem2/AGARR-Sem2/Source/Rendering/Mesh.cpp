@@ -1,66 +1,62 @@
 #include "pch.h"
 #include "Mesh.h"
 
+#include "WaveFrontReader.h"
+
 using namespace DirectX::SimpleMath;
 
 Mesh::Mesh()
 {
-	// TODO: Move this to Initialise() function, to allow for re-initialisation
-	// TODO: Replace this with model loading
-	Vertices =
+	Initialise(DefaultCubeObjPath);
+}
+
+void Mesh::Initialise(std::wstring modelPath)
+{
+	LoadDataFromOBJ(modelPath);
+
+	CreateMeshBuffers();
+}
+
+void Mesh::Initialise(int width, int height)
+{
+	std::vector<Vertex> newVerts;
+	std::vector<unsigned short> newIndices;
+
+	for (unsigned int y = 0; y < height; y++)
 	{
-		{ Vector3(-1.0f, 1.0f, -1.0f), Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f, 0.0f) },
-		{ Vector3(1.0f, 1.0f, -1.0f), Vector3(0.0f, 1.0f, 0.0f), Vector2(0.0f, 0.0f) },
-		{ Vector3(1.0f, 1.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f), Vector2(0.0f, 1.0f) },
-		{ Vector3(-1.0f, 1.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f, 1.0f) },
+		for (unsigned int x = 0; x < width; x++)
+		{
+			// Generate vertices
+			Vertex vert = {
+				Vector3(x, 0, y),
+				Vector3(0, 1, 0),
+				Vector2(x, y)
+			};
+			newVerts.push_back(vert);
 
-		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f, 0.0f) },
-		{ Vector3(1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f, 0.0f) },
-		{ Vector3(1.0f, -1.0f, 1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f, 1.0f) },
-		{ Vector3(-1.0f, -1.0f, 1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f, 1.0f) },
+			// Generate indices
+			if (x == width - 1 || y == height - 1)
+				continue;
+			//Triangle 1
+			newIndices.push_back(y * width + x);
+			newIndices.push_back((y + 1) * width + x);
+			newIndices.push_back(y * width + (x + 1));
 
-		{ Vector3(-1.0f, -1.0f, 1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f, 1.0f) },
-		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f, 1.0f) },
-		{ Vector3(-1.0f, 1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f, 0.0f) },
-		{ Vector3(-1.0f, 1.0f, 1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f, 0.0f) },
+			//Triangle 2
+			newIndices.push_back(y * width + (x + 1));
+			newIndices.push_back((y + 1) * width + x);
+			newIndices.push_back((y + 1) * width + (x + 1));
+		}
+	}
 
-		{ Vector3(1.0f, -1.0f, 1.0f), Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f, 1.0f) },
-		{ Vector3(1.0f, -1.0f, -1.0f), Vector3(1.0f, 0.0f, 0.0f), Vector2(0.0f, 1.0f) },
-		{ Vector3(1.0f, 1.0f, -1.0f), Vector3(1.0f, 0.0f, 0.0f), Vector2(0.0f, 0.0f) },
-		{ Vector3(1.0f, 1.0f, 1.0f), Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f, 0.0f) },
+	Vertices = newVerts;
+	Indices = newIndices;
 
-		{ Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f, 1.0f) },
-		{ Vector3(1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f, 1.0f) },
-		{ Vector3(1.0f, 1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f, 0.0f) },
-		{ Vector3(-1.0f, 1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f, 0.0f) },
+	CreateMeshBuffers();
+}
 
-		{ Vector3(-1.0f, -1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f, 1.0f) },
-		{ Vector3(1.0f, -1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f), Vector2(0.0f, 1.0f) },
-		{ Vector3(1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f), Vector2(0.0f, 0.0f) },
-		{ Vector3(-1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f, 0.0f) },
-	};
-
-	Indices =
-	{
-		3, 1, 0,
-		2, 1, 3,
-
-		6, 4, 5,
-		7, 4, 6,
-
-		11, 9, 8,
-		10, 9, 11,
-
-		14, 12, 13,
-		15, 12, 14,
-
-		19, 17, 16,
-		18, 17, 19,
-
-		22, 20, 21,
-		23, 20, 22
-	};
-
+void Mesh::CreateMeshBuffers()
+{
 	const auto device = DX::DeviceResources::Instance()->GetD3DDevice();
 
 	// Create vertex buffer
@@ -84,4 +80,12 @@ Mesh::Mesh()
 	InitData.pSysMem = Indices.data();
 
 	DX::ThrowIfFailed(device->CreateBuffer(&bd, &InitData, IndexBuffer.ReleaseAndGetAddressOf()));
+}
+
+void Mesh::LoadDataFromOBJ(std::wstring path)
+{
+	WaveFrontReader<unsigned short> objReader{};
+	objReader.Load(path.c_str(), true);
+	Vertices = objReader.vertices;
+	Indices = objReader.indices;
 }

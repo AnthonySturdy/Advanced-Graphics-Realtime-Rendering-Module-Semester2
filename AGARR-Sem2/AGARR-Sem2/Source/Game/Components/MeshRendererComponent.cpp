@@ -50,7 +50,35 @@ void MeshRendererComponent::Render()
 
 void MeshRendererComponent::RenderGUI()
 {
-	ImGui::Text("TODO: Implement model loading / mesh generation options");
+	// Model loading
+	static char* path = new char[512]{};
+	ImGui::InputText("##", path, 512, ImGuiInputTextFlags_ReadOnly);
+	ImGui::SameLine();
+	if (ImGui::Button("Choose Model"))
+		ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".obj", ".");
+
+	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			const std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+
+			delete path;
+			path = new char[512]{};
+			for (int i = 0; i < filePath.size(); ++i)
+				path[i] = filePath[i];
+			MeshData->Initialise(std::wstring(filePath.begin(), filePath.end()));
+		}
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	// Plane Generation
+	static int planeSz[2]{};
+	ImGui::DragInt2("##", &planeSz[0]);
+	ImGui::SameLine();
+	if (ImGui::Button("Generate Plane"))
+		MeshData->Initialise(planeSz[0], planeSz[1]);
+
 	ImGui::SliderFloat("Tessellation Amount", &TessellationAmount, 1.0f, 32.0f);
 }
 
