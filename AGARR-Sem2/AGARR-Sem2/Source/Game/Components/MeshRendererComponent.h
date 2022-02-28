@@ -24,6 +24,9 @@ public:
 	void Render() override;
 	void RenderGUI() override;
 
+	[[nodiscard]] Mesh* GetMesh() const { return MeshData.get(); }
+	[[nodiscard]] Shader* GetShader() const { return MeshShader.get(); }
+
 protected:
 	[[nodiscard]] std::string GetComponentName() const override { return "Mesh Renderer"; }
 

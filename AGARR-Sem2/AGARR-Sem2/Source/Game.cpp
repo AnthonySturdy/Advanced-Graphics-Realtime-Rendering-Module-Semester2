@@ -3,6 +3,7 @@
 
 #include "Game/Components/CameraComponent.h"
 #include "Game/Components/MeshRendererComponent.h"
+#include "Game/Components/PlaneMeshGeneratorComponent.h"
 #include "Game/Components/TransformComponent.h"
 #include "Rendering/RenderPassGeometry.h"
 
@@ -63,6 +64,7 @@ void Game::Initialize(HWND window, int width, int height)
 	GameObjects.push_back(new GameObject());
 	const auto cube = GameObjects[1];
 	cube->AddComponent(new MeshRendererComponent());
+	cube->AddComponent(new PlaneMeshGeneratorComponent());
 
 	// Vsync
 	m_timer.SetFixedTimeStep(true);

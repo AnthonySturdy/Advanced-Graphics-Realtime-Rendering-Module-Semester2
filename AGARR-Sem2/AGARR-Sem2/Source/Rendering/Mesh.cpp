@@ -10,45 +10,15 @@ Mesh::Mesh()
 	Initialise(DefaultCubeObjPath);
 }
 
-void Mesh::Initialise(std::wstring modelPath)
+void Mesh::Initialise(const std::wstring& modelPath)
 {
 	LoadDataFromOBJ(modelPath);
 
 	CreateMeshBuffers();
 }
 
-void Mesh::Initialise(int width, int height)
+void Mesh::Initialise(const std::vector<Vertex>& newVerts, const std::vector<UINT>& newIndices)
 {
-	std::vector<Vertex> newVerts;
-	std::vector<unsigned short> newIndices;
-
-	for (unsigned int y = 0; y < height; y++)
-	{
-		for (unsigned int x = 0; x < width; x++)
-		{
-			// Generate vertices
-			Vertex vert = {
-				Vector3(x, 0, y),
-				Vector3(0, 1, 0),
-				Vector2(x, y)
-			};
-			newVerts.push_back(vert);
-
-			// Generate indices
-			if (x == width - 1 || y == height - 1)
-				continue;
-			//Triangle 1
-			newIndices.push_back(y * width + x);
-			newIndices.push_back((y + 1) * width + x);
-			newIndices.push_back(y * width + (x + 1));
-
-			//Triangle 2
-			newIndices.push_back(y * width + (x + 1));
-			newIndices.push_back((y + 1) * width + x);
-			newIndices.push_back((y + 1) * width + (x + 1));
-		}
-	}
-
 	Vertices = newVerts;
 	Indices = newIndices;
 
@@ -73,7 +43,7 @@ void Mesh::CreateMeshBuffers()
 
 	// Create index buffer
 	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(unsigned short) * Indices.size();
+	bd.ByteWidth = sizeof(UINT) * Indices.size();
 	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
@@ -84,7 +54,7 @@ void Mesh::CreateMeshBuffers()
 
 void Mesh::LoadDataFromOBJ(std::wstring path)
 {
-	WaveFrontReader<unsigned short> objReader{};
+	WaveFrontReader<UINT> objReader{};
 	objReader.Load(path.c_str(), true);
 	Vertices = objReader.vertices;
 	Indices = objReader.indices;

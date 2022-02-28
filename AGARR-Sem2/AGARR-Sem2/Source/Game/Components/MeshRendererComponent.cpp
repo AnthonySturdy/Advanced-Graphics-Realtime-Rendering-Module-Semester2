@@ -42,7 +42,7 @@ void MeshRendererComponent::Render()
 	context->IASetVertexBuffers(0, 1, &vBuf, &stride, &offset);
 
 	ID3D11Buffer* iBuf = MeshData->GetIndexBuffer();
-	context->IASetIndexBuffer(iBuf, DXGI_FORMAT_R16_UINT, 0);
+	context->IASetIndexBuffer(iBuf, DXGI_FORMAT_R32_UINT, 0);
 
 	// Draw object
 	context->DrawIndexed(MeshData->GetNumIndices(), 0, 0);
@@ -55,29 +55,23 @@ void MeshRendererComponent::RenderGUI()
 	ImGui::InputText("##", path, 512, ImGuiInputTextFlags_ReadOnly);
 	ImGui::SameLine();
 	if (ImGui::Button("Choose Model"))
-		ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".obj", ".");
+		ImGuiFileDialog::Instance()->OpenDialog("SelectObjModel", "Choose File", ".obj", ".");
 
-	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+	if (ImGuiFileDialog::Instance()->Display("SelectObjModel"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
 		{
 			const std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
 
-			delete path;
+			delete[] path;
 			path = new char[512]{};
 			for (int i = 0; i < filePath.size(); ++i)
 				path[i] = filePath[i];
+
 			MeshData->Initialise(std::wstring(filePath.begin(), filePath.end()));
 		}
 		ImGuiFileDialog::Instance()->Close();
 	}
-
-	// Plane Generation
-	static int planeSz[2]{};
-	ImGui::DragInt2("##", &planeSz[0]);
-	ImGui::SameLine();
-	if (ImGui::Button("Generate Plane"))
-		MeshData->Initialise(planeSz[0], planeSz[1]);
 
 	ImGui::SliderFloat("Tessellation Amount", &TessellationAmount, 1.0f, 32.0f);
 }

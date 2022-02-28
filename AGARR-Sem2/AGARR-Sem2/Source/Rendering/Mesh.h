@@ -17,8 +17,8 @@ public:
 	Mesh& operator=(Mesh&&) = default;
 	~Mesh() = default;
 
-	void Initialise(std::wstring modelPath);
-	void Initialise(int width, int height);
+	void Initialise(const std::wstring& modelPath);
+	void Initialise(const std::vector<Vertex>& newVerts, const std::vector<UINT>& newIndices);
 
 	[[nodiscard]] ID3D11Buffer* GetVertexBuffer() const { return VertexBuffer.Get(); }
 	[[nodiscard]] ID3D11Buffer* GetIndexBuffer() const { return IndexBuffer.Get(); }
@@ -30,7 +30,7 @@ private:
 	void LoadDataFromOBJ(std::wstring path);
 
 	std::vector<Vertex> Vertices{};
-	std::vector<unsigned short> Indices{};
+	std::vector<UINT> Indices{};
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer{};
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer{};
 
