@@ -22,7 +22,7 @@ public:
 	virtual void RenderGUI() = 0;
 
 protected:
-	[[nodiscard]] virtual std::string GetComponentName() const { return "Untitled Component"; }
+	[[nodiscard]] virtual constexpr std::string GetComponentName() { return "Untitled Component"; }
 
 	GameObject* Parent{ nullptr };
 

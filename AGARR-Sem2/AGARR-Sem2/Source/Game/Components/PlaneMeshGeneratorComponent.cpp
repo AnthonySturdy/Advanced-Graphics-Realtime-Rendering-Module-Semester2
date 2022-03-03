@@ -46,7 +46,7 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 
 	// Plane Generation
 	static int planeSz[2]{ 1, 1 };
-	ImGui::DragInt2("Plane Size", &planeSz[0], 1, 1, INT16_MAX);
+	ImGui::DragInt2("Plane Size", &planeSz[0], 1, 1, useHeightmap ? HeightmapSize : INT16_MAX);
 	if (ImGui::Button("Generate Plane"))
 		GeneratePlane(planeSz[0], planeSz[1], useHeightmap, heightMapScale);
 }
@@ -103,9 +103,7 @@ void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useH
 
 void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 {
-	std::ifstream inFile(path.c_str(), std::ios_base::binary);
-
-	if (inFile)
+	if (std::ifstream inFile(path.c_str(), std::ios_base::binary); inFile)
 	{
 		Heightmap = std::vector<unsigned char>(std::istreambuf_iterator<char>(inFile),
 		                                       std::istreambuf_iterator<char>());

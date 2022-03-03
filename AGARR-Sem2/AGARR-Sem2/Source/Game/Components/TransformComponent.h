@@ -26,7 +26,7 @@ public:
 	void SetScale(DirectX::SimpleMath::Vector3 val) { Scale = val; }
 
 protected:
-	[[nodiscard]] std::string GetComponentName() const override { return "Transform"; }
+	[[nodiscard]] constexpr std::string GetComponentName() override { return "Transform"; }
 
 private:
 	DirectX::SimpleMath::Vector3 Position{ DirectX::SimpleMath::Vector3::Zero };

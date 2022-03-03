@@ -28,7 +28,7 @@ public:
 	[[nodiscard]] Shader* GetShader() const { return MeshShader.get(); }
 
 protected:
-	[[nodiscard]] std::string GetComponentName() const override { return "Mesh Renderer"; }
+	[[nodiscard]] constexpr std::string GetComponentName() override { return "Mesh Renderer"; }
 
 private:
 	void CreateConstantBuffer();

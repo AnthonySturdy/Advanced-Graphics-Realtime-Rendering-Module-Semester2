@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "Game.h"
 
+#include "Core/InputManager.h"
 #include "Game/Components/CameraComponent.h"
 #include "Game/Components/MeshRendererComponent.h"
 #include "Game/Components/PlaneMeshGeneratorComponent.h"
 #include "Game/Components/TransformComponent.h"
+#include "Game/Components/MouseLookComponent.h"
 #include "Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
@@ -29,6 +31,8 @@ void Game::Initialize(HWND window, int width, int height)
 	DX::DeviceResources::Instance()->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 
+	InputManager::GetMouse()->SetWindow(window);
+
 	// Initialise ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -51,7 +55,7 @@ void Game::Initialize(HWND window, int width, int height)
 
 	// Create and Initialise render pipeline
 	RenderPipeline.push_back(std::make_unique<RenderPassGeometry>(GameObjects));
-	for (auto& rp : RenderPipeline)
+	for (const auto& rp : RenderPipeline)
 		rp->Initialise();
 
 	// Create GameObjects
@@ -59,7 +63,8 @@ void Game::Initialize(HWND window, int width, int height)
 	const auto cam = GameObjects[0];
 	cam->AddComponent(new CameraComponent());
 	TransformComponent* camTransf = cam->GetComponent<TransformComponent>();
-	camTransf->SetPosition(SimpleMath::Vector3(-2.0f, 5.0f, 5.0f));
+	camTransf->SetPosition(SimpleMath::Vector3(2.0f, 2.0f, 2.0f));
+	cam->AddComponent(new MouseLookComponent());
 
 	GameObjects.push_back(new GameObject());
 	const auto cube = GameObjects[1];
@@ -131,6 +136,19 @@ void Game::Render()
 	}
 	ImGui::Image(reinterpret_cast<RenderPassGeometry*>(RenderPipeline[0].get())->GetSRV(),
 	             ImGui::GetContentRegionAvail());
+
+	// Lock cursor on viewport click
+	const auto mouse = InputManager::GetMouse();
+	const auto mouseState = mouse->GetState();
+	if (ImGui::IsItemHovered())
+	{
+		mouse->SetMode(mouseState.leftButton
+			               ? DirectX::Mouse::MODE_RELATIVE
+			               : DirectX::Mouse::MODE_ABSOLUTE);
+	}
+	if (!mouseState.leftButton)
+		mouse->SetMode(DirectX::Mouse::MODE_ABSOLUTE);
+
 	ImGui::End();
 	ImGui::PopStyleVar();
 

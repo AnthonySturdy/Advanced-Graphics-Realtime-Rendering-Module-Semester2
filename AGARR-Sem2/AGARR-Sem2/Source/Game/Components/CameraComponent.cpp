@@ -54,13 +54,25 @@ void CameraComponent::RenderGUI()
 
 DirectX::SimpleMath::Matrix CameraComponent::GetViewMatrix() const
 {
+	// Modified version of: https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
+	// Convert euler rotation to view matrix
+
 	const TransformComponent* transform = Parent->GetComponent<TransformComponent>();
 
 	const DirectX::SimpleMath::Vector3 eye = transform->GetPosition();
 	const DirectX::SimpleMath::Vector3 dir = transform->GetRotation();
-	const DirectX::SimpleMath::Vector3 up = DirectX::SimpleMath::Vector3::Up;
 
-	return DirectX::XMMatrixLookAtLH(eye, dir, up);
+	// Pitch and Yaw
+	const DirectX::SimpleMath::Matrix camRotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(dir.y, dir.x, 0);
+	DirectX::SimpleMath::Vector3 camTarget = DirectX::XMVector3TransformCoord(DirectX::SimpleMath::Vector3::Forward, camRotationMatrix);
+	camTarget.Normalize();
+	camTarget += eye;
+
+	// Roll
+	const DirectX::SimpleMath::Matrix camYRotationMatrix = DirectX::XMMatrixRotationZ(dir.z);
+	const DirectX::SimpleMath::Vector3 camUp = DirectX::XMVector3TransformCoord(DirectX::SimpleMath::Vector3::Up, camYRotationMatrix);
+
+	return DirectX::XMMatrixLookAtLH(eye, camTarget, camUp);
 }
 
 DirectX::SimpleMath::Matrix CameraComponent::GetProjectionMatrix() const

@@ -46,6 +46,8 @@
 #include <DirectXColors.h>
 
 #include "SimpleMath.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 #include <algorithm>
 #include <cmath>

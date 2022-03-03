@@ -34,7 +34,7 @@ public:
 	void SetFarPlane(float val) { FarPlane = val; }
 
 protected:
-	[[nodiscard]] std::string GetComponentName() const override { return "Camera"; }
+	[[nodiscard]] constexpr std::string GetComponentName() override { return "Camera"; }
 
 private:
 	void CreateConstantBuffer();

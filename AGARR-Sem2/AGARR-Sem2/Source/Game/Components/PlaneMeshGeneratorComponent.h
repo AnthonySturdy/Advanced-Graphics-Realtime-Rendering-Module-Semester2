@@ -16,7 +16,7 @@ public:
 	void RenderGUI() override;
 
 protected:
-	[[nodiscard]] std::string GetComponentName() const override { return "Plane Mesh Generator"; }
+	[[nodiscard]] constexpr std::string GetComponentName() override { return "Plane Mesh Generator"; }
 
 private:
 	void GeneratePlane(int width, int height, bool useHeightmap = false, float heightMapScale = 1.0f);
