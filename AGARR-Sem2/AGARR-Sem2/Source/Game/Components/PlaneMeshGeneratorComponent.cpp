@@ -4,14 +4,33 @@
 #include "MeshRendererComponent.h"
 #include "Rendering/Mesh.h"
 
+PlaneMeshGeneratorComponent::PlaneMeshGeneratorComponent()
+{
+	const auto device = DX::DeviceResources::Instance()->GetD3DDevice();
+
+	D3D11_BUFFER_DESC bd = {};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(TerrainConstantBuffer);
+	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bd.CPUAccessFlags = 0;
+	DX::ThrowIfFailed(device->CreateBuffer(&bd, nullptr, TerrainCBuffer.ReleaseAndGetAddressOf()));
+}
+
 void PlaneMeshGeneratorComponent::RenderGUI()
 {
 	// Static Heightmap
-	// Heightmap file selection
-	static char* path = new char[512]{};
-	ImGui::InputText("##", path, 512, ImGuiInputTextFlags_ReadOnly);
+	ImGui::Image(HeightmapSRV.Get(), ImVec2(20, 20)); // Heightmap preview and tooltip
+	if (ImGui::IsItemHovered() && HeightmapSize != 0)
+	{
+		ImGui::BeginTooltip();
+		ImGui::Image(HeightmapSRV.Get(), ImVec2(200, 200));
+		ImGui::EndTooltip();
+	}
 	ImGui::SameLine();
-	if (ImGui::Button("Choose Heightmap"))
+	static char* path = new char[512]{}; // Heightmap file selection
+	ImGui::InputTextWithHint("##", "Select Heightmap File", path, 512, ImGuiInputTextFlags_ReadOnly);
+	ImGui::SameLine();
+	if (ImGui::Button("..."))
 		ImGuiFileDialog::Instance()->OpenDialog("SelectRawHeightmap", "Choose File", ".raw", ".");
 
 	if (ImGuiFileDialog::Instance()->Display("SelectRawHeightmap"))
@@ -26,29 +45,42 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 				path[i] = filePath[i];
 
 			LoadHeightmap(std::wstring(filePath.begin(), filePath.end()));
+			CreateSrvFromHeightmap();
 		}
 		ImGuiFileDialog::Instance()->Close();
 	}
 
 	// Heightmap controls
-	static bool useHeightmap = false;
 	if (HeightmapSize != 0)
-		ImGui::Checkbox("Use Heightmap", &useHeightmap);
+		ImGui::Checkbox("Use Heightmap", &UseHeightmap);
 	else
-		useHeightmap = false;
+		UseHeightmap = false;
 
-	static float heightMapScale = 1.0f;
-	if (useHeightmap)
+	if (UseHeightmap)
 	{
-		ImGui::DragFloat("Heightmap Scale", &heightMapScale, 0.001f, 0.001f, 50.0f);
-		// TODO: Heightmap texturing per height, etc
+		ImGui::Checkbox("Static", &StaticHeightmap);
+		ImGui::DragFloat("Heightmap Scale", &HeightmapVerticalScale, 0.01f, 0.01f, 500.0f);
 	}
 
 	// Plane Generation
 	static int planeSz[2]{ 1, 1 };
-	ImGui::DragInt2("Plane Size", &planeSz[0], 1, 1, useHeightmap ? HeightmapSize : INT16_MAX);
+	ImGui::DragInt2("Plane Size", &planeSz[0], 1, 1, UseHeightmap ? HeightmapSize : INT16_MAX);
 	if (ImGui::Button("Generate Plane"))
-		GeneratePlane(planeSz[0], planeSz[1], useHeightmap, heightMapScale);
+	{
+		GeneratePlane(planeSz[0], planeSz[1], UseHeightmap, HeightmapVerticalScale);
+
+		// Update shader resources
+		const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
+		ID3D11ShaderResourceView* nsrv = nullptr;
+		context->DSSetShaderResources(0, 1, &nsrv);
+		if (UseHeightmap)
+			context->DSSetShaderResources(0, 1, HeightmapSRV.GetAddressOf());
+
+		TerrainCBufferData.ApplyHeightmap = !StaticHeightmap;
+		TerrainCBufferData.HeightmapScale = HeightmapVerticalScale;
+		context->UpdateSubresource(TerrainCBuffer.Get(), 0, nullptr, &TerrainCBufferData, 0, 0);
+		context->DSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
+	}
 }
 
 void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useHeightmap, float heightMapScale)
@@ -56,8 +88,6 @@ void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useH
 	const auto meshRenderer = Parent->GetComponent<MeshRendererComponent>();
 	if (!meshRenderer)
 		return;
-
-	Mesh* mesh = meshRenderer->GetMesh();
 
 	++width;
 	++height;
@@ -73,13 +103,13 @@ void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useH
 
 			float heightMapSample = 0.0f;
 			if (useHeightmap)
-				heightMapSample = SampleHeightmap(normX, normY);
+				heightMapSample = static_cast<float>(SampleHeightmap(normX, normY)) / 255.0f;
 
 			// Generate vertices
 			Vertex vert = {
-				DirectX::SimpleMath::Vector3(x, heightMapSample * heightMapScale, y),
+				DirectX::SimpleMath::Vector3(x, StaticHeightmap ? heightMapSample * HeightmapVerticalScale : 0, y),
 				CalculateNormalAt(normX, normY),
-				DirectX::SimpleMath::Vector2(x, y)
+				DirectX::SimpleMath::Vector2(normX, normY)
 			};
 			newVerts.push_back(vert);
 
@@ -98,6 +128,7 @@ void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useH
 		}
 	}
 
+	Mesh* mesh = meshRenderer->GetMesh();
 	mesh->Initialise(newVerts, newIndices);
 }
 
@@ -112,6 +143,37 @@ void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 
 		inFile.close();
 	}
+}
+
+void PlaneMeshGeneratorComponent::CreateSrvFromHeightmap()
+{
+	if (Heightmap.size() == 0)
+		return;
+
+	const auto device = DX::DeviceResources::Instance()->GetD3DDevice();
+
+	const D3D11_SUBRESOURCE_DATA initData = { Heightmap.data(), HeightmapSize, 0 };
+
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width = desc.Height = HeightmapSize;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> tex;
+	DX::ThrowIfFailed(device->CreateTexture2D(&desc,
+	                                          &initData,
+	                                          tex.ReleaseAndGetAddressOf()));
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+	SRVDesc.Format = DXGI_FORMAT_R8_UNORM;
+	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	SRVDesc.Texture2D.MipLevels = 1;
+	DX::ThrowIfFailed(device->CreateShaderResourceView(tex.Get(),
+	                                                   &SRVDesc,
+	                                                   HeightmapSRV.ReleaseAndGetAddressOf()));
 }
 
 unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(int x, int y) const

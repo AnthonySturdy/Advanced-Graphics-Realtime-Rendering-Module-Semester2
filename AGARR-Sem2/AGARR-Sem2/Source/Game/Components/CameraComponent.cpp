@@ -6,7 +6,7 @@
 CameraComponent::CameraComponent()
 	: FOV(DirectX::XM_PIDIV2),
 	  NearPlane(0.01f),
-	  FarPlane(200.0f)
+	  FarPlane(500.0f)
 {
 	CreateConstantBuffer();
 }

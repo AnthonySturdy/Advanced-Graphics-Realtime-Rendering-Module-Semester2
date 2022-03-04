@@ -35,6 +35,10 @@ void MeshRendererComponent::Render()
 	// Bind input layout
 	context->IASetInputLayout(MeshShader->GetInputLayout());
 
+	// Bind sampler
+	const auto sampler = MeshShader->GetSamplerState();
+	context->PSSetSamplers(0, 1, &sampler);
+
 	// Bind vertex and index buffers
 	ID3D11Buffer* const vBuf = MeshData->GetVertexBuffer();
 	static constexpr UINT stride = sizeof(Vertex);

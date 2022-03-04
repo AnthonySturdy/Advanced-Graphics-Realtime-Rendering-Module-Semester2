@@ -17,6 +17,7 @@ public:
 	[[nodiscard]] ID3D11DomainShader* GetDomainShader() const { return DomainShader.Get(); }
 	[[nodiscard]] ID3D11PixelShader* GetPixelShader() const { return PixelShader.Get(); }
 	[[nodiscard]] ID3D11InputLayout* GetInputLayout() const { return InputLayout.Get(); }
+	[[nodiscard]] ID3D11SamplerState* GetSamplerState() const { return LinearSampler.Get(); }
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
@@ -24,6 +25,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DomainShader> DomainShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
+
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> LinearSampler;
 
 	D3D11_INPUT_ELEMENT_DESC InputLayoutDesc[3]
 	{
