@@ -18,7 +18,11 @@ PlaneMeshGeneratorComponent::PlaneMeshGeneratorComponent()
 
 void PlaneMeshGeneratorComponent::RenderGUI()
 {
-	// Static Heightmap
+	// Heightmap Generation/Selection
+	const char* heightmapSourceListItems[] = { ".RAW File", "Fault Formation", "Midpoint Displacement", "Perlin Noise" };
+	static int heightMapSourceSelection = 0;
+	ImGui::Combo("Heightmap Source", &heightMapSourceSelection, heightmapSourceListItems, 4);
+
 	ImGui::Image(HeightmapSRV.Get(), ImVec2(20, 20)); // Heightmap preview and tooltip
 	if (ImGui::IsItemHovered() && HeightmapSize != 0)
 	{
@@ -28,10 +32,32 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 	}
 	ImGui::SameLine();
 	static char* path = new char[512]{}; // Heightmap file selection
-	ImGui::InputTextWithHint("##", "Select Heightmap File", path, 512, ImGuiInputTextFlags_ReadOnly);
-	ImGui::SameLine();
-	if (ImGui::Button("..."))
-		ImGuiFileDialog::Instance()->OpenDialog("SelectRawHeightmap", "Choose File", ".raw", ".");
+	switch (heightMapSourceSelection)
+	{
+	default:
+	case 0:
+		ImGui::InputTextWithHint("##", "Select .RAW Heightmap File", path, 512, ImGuiInputTextFlags_ReadOnly);
+		ImGui::SameLine();
+		if (ImGui::Button("..."))
+			ImGuiFileDialog::Instance()->OpenDialog("SelectRawHeightmap", "Choose File", ".raw", ".");
+		break;
+	case 1:
+		if (ImGui::Button("Generate Heightmap"))
+			GenerateFaultFormationHeightmap();
+		break;
+	case 2:
+		if (ImGui::Button("Generate Heightmap"))
+		{
+			// Midpoint Displacement
+		}
+		break;
+	case 3:
+		if (ImGui::Button("Generate Heightmap"))
+		{
+			// Perlin
+		}
+		break;
+	}
 
 	if (ImGuiFileDialog::Instance()->Display("SelectRawHeightmap"))
 	{
@@ -45,7 +71,6 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 				path[i] = filePath[i];
 
 			LoadHeightmap(std::wstring(filePath.begin(), filePath.end()));
-			CreateSrvFromHeightmap();
 		}
 		ImGuiFileDialog::Instance()->Close();
 	}
@@ -62,9 +87,11 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 		ImGui::DragFloat("Heightmap Scale", &HeightmapVerticalScale, 0.01f, 0.01f, 500.0f);
 	}
 
-	// Plane Generation
+	// Plane Size
 	static int planeSz[2]{ 1, 1 };
 	ImGui::DragInt2("Plane Size", &planeSz[0], 1, 1, UseHeightmap ? HeightmapSize : INT16_MAX);
+
+	// Plane generation
 	if (ImGui::Button("Generate Plane"))
 	{
 		GeneratePlane(planeSz[0], planeSz[1], UseHeightmap, HeightmapVerticalScale);
@@ -143,9 +170,47 @@ void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 
 		inFile.close();
 	}
+
+	CreateSrvFromHeightmapData();
 }
 
-void PlaneMeshGeneratorComponent::CreateSrvFromHeightmap()
+void PlaneMeshGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int width, unsigned int height, unsigned int iterations)
+{
+	std::vector<float> newHeightmap{};
+	newHeightmap.resize(width * height);
+
+	for (unsigned int i = 0; i < iterations; ++i)
+	{
+		const DirectX::SimpleMath::Vector2 lineA(rand() % width, rand() % height);
+		const DirectX::SimpleMath::Vector2 lineB(rand() % width, rand() % height);
+
+		for (unsigned int x = 0; x < width; ++x)
+		{
+			for (unsigned int y = 0; y < height; ++y)
+			{
+				const unsigned int index = y * width + x;
+				if (index >= newHeightmap.size())
+					return;
+
+				const DirectX::SimpleMath::Vector2 point(x, y);
+
+				const float normIteration = (1.0f - (i / static_cast<float>(iterations)));
+				const bool pointIncremented = (lineB.x - lineA.x) * (point.y - lineA.y) > (lineB.y - lineA.y) * (point.x - lineA.x);
+				static constexpr float heightmapIntensity = 200.0f;
+				const float valueChangeAmount = iterations / heightmapIntensity * normIteration;
+
+				newHeightmap[index] += pointIncremented ? valueChangeAmount : -valueChangeAmount;
+				newHeightmap[index] = std::clamp(newHeightmap[index], 0.0f, 255.0f);
+			}
+		}
+	}
+
+	Heightmap = std::vector<unsigned char>(newHeightmap.begin(), newHeightmap.end());
+	HeightmapSize = width;
+	CreateSrvFromHeightmapData();
+}
+
+void PlaneMeshGeneratorComponent::CreateSrvFromHeightmapData()
 {
 	if (Heightmap.size() == 0)
 		return;
@@ -203,15 +268,10 @@ unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(float normx, float no
 
 DirectX::SimpleMath::Vector3 PlaneMeshGeneratorComponent::CalculateNormalAt(int x, int y) const
 {
-	float sx = SampleHeightmap(x < HeightmapSize - 1 ? x + 1 : x, y) - SampleHeightmap(x != 0 ? x - 1 : x, y);
-	if (x == 0 || x == HeightmapSize - 1)
-		sx *= 2;
+	const unsigned char sx = SampleHeightmap(x % HeightmapSize, y) - SampleHeightmap(x != 0 ? x - 1 : HeightmapSize - 1, y);
+	const unsigned char sy = SampleHeightmap(x, y % HeightmapSize) - SampleHeightmap(x, y != 0 ? y - 1 : HeightmapSize - 1);
 
-	float sy = SampleHeightmap(x, y < HeightmapSize - 1 ? y + 1 : y) - SampleHeightmap(x, y != 0 ? y - 1 : y);
-	if (y == 0 || y == HeightmapSize - 1)
-		sy *= 2;
-
-	DirectX::SimpleMath::Vector3 normal(-sx, 2, sy);
+	DirectX::SimpleMath::Vector3 normal(-static_cast<float>(sx), 2.0f, static_cast<float>(sy));
 	normal.Normalize();
 
 	return normal;

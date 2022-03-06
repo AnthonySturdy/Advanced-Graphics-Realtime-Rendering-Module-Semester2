@@ -19,11 +19,11 @@ void MouseLookComponent::Update(float deltaTime)
 		                                                                        static_cast<float>(mouseState.y),
 		                                                                        0.f) * MouseSensitivity;
 
-		rot.x += delta.x;
-		rot.y -= delta.y;
+		rot.x -= delta.y;
+		rot.y += delta.x;
 
 		static constexpr float limit = DirectX::XM_PIDIV2 - 0.01f;
-		rot.y = std::clamp(rot.y, -limit, limit);
+		rot.x = std::clamp(rot.x, -limit, limit);
 	}
 
 	transform->SetRotation(rot);

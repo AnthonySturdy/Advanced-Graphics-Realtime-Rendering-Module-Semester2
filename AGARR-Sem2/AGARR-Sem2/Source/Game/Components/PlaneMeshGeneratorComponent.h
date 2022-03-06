@@ -28,7 +28,8 @@ protected:
 private:
 	void GeneratePlane(int width, int height, bool useHeightmap = false, float heightMapScale = 1.0f);
 	void LoadHeightmap(const std::wstring& path);
-	void CreateSrvFromHeightmap();
+	void GenerateFaultFormationHeightmap(unsigned int width = 256, unsigned int height = 256, unsigned int iterations = 600);
+	void CreateSrvFromHeightmapData();
 	[[nodiscard]] unsigned char SampleHeightmap(int x, int y) const;
 	[[nodiscard]] unsigned char SampleHeightmap(float normx, float normy) const;
 	[[nodiscard]] DirectX::SimpleMath::Vector3 CalculateNormalAt(int x, int y) const;

@@ -39,9 +39,8 @@ void GameObject::RenderGUI()
 				ImGui::PushID(component.get());
 				if (ImGui::TreeNode(component->GetComponentName().c_str()))
 				{
-					ImGui::BeginChild("##", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowHeight() / 4), true);
 					component->RenderGUI();
-					ImGui::EndChild();
+					ImGui::Separator();
 
 					ImGui::TreePop();
 				}

@@ -63,7 +63,7 @@ DirectX::SimpleMath::Matrix CameraComponent::GetViewMatrix() const
 	const DirectX::SimpleMath::Vector3 dir = transform->GetRotation();
 
 	// Pitch and Yaw
-	const DirectX::SimpleMath::Matrix camRotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(dir.y, dir.x, 0);
+	const DirectX::SimpleMath::Matrix camRotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(dir.x, dir.y, 0);
 	DirectX::SimpleMath::Vector3 camTarget = DirectX::XMVector3TransformCoord(DirectX::SimpleMath::Vector3::Forward, camRotationMatrix);
 	camTarget.Normalize();
 	camTarget += eye;
