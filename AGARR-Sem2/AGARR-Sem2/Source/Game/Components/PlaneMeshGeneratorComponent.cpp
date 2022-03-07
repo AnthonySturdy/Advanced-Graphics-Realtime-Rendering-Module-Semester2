@@ -19,7 +19,7 @@ PlaneMeshGeneratorComponent::PlaneMeshGeneratorComponent()
 void PlaneMeshGeneratorComponent::RenderGUI()
 {
 	// Heightmap Generation/Selection
-	const char* heightmapSourceListItems[] = { ".RAW File", "Fault Formation", "Midpoint Displacement", "Perlin Noise" };
+	const char* heightmapSourceListItems[] = { ".RAW File", "Fault Formation", "Diamond Square", "Perlin Noise" };
 	static int heightMapSourceSelection = 0;
 	ImGui::Combo("Heightmap Source", &heightMapSourceSelection, heightmapSourceListItems, 4);
 
@@ -40,6 +40,21 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 		ImGui::SameLine();
 		if (ImGui::Button("..."))
 			ImGuiFileDialog::Instance()->OpenDialog("SelectRawHeightmap", "Choose File", ".raw", ".");
+		if (ImGuiFileDialog::Instance()->Display("SelectRawHeightmap"))
+		{
+			if (ImGuiFileDialog::Instance()->IsOk())
+			{
+				const std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+
+				delete[] path;
+				path = new char[512]{};
+				for (int i = 0; i < filePath.size(); ++i)
+					path[i] = filePath[i];
+
+				LoadHeightmap(std::wstring(filePath.begin(), filePath.end()));
+			}
+			ImGuiFileDialog::Instance()->Close();
+		}
 		break;
 	case 1:
 		if (ImGui::Button("Generate Heightmap"))
@@ -48,7 +63,7 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 	case 2:
 		if (ImGui::Button("Generate Heightmap"))
 		{
-			// Midpoint Displacement
+			GenerateDiamondSquareHeightmap();
 		}
 		break;
 	case 3:
@@ -57,22 +72,6 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 			// Perlin
 		}
 		break;
-	}
-
-	if (ImGuiFileDialog::Instance()->Display("SelectRawHeightmap"))
-	{
-		if (ImGuiFileDialog::Instance()->IsOk())
-		{
-			const std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
-
-			delete[] path;
-			path = new char[512]{};
-			for (int i = 0; i < filePath.size(); ++i)
-				path[i] = filePath[i];
-
-			LoadHeightmap(std::wstring(filePath.begin(), filePath.end()));
-		}
-		ImGuiFileDialog::Instance()->Close();
 	}
 
 	// Heightmap controls
@@ -176,8 +175,7 @@ void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 
 void PlaneMeshGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int width, unsigned int height, unsigned int iterations)
 {
-	std::vector<float> newHeightmap{};
-	newHeightmap.resize(width * height);
+	std::vector<float> newHeightmap(width * height);
 
 	for (unsigned int i = 0; i < iterations; ++i)
 	{
@@ -208,6 +206,128 @@ void PlaneMeshGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int w
 	Heightmap = std::vector<unsigned char>(newHeightmap.begin(), newHeightmap.end());
 	HeightmapSize = width;
 	CreateSrvFromHeightmapData();
+}
+
+void PlaneMeshGeneratorComponent::GenerateDiamondSquareHeightmap(unsigned int width, unsigned int height, unsigned int featureSize)
+{
+	// Reference: http://bluh.org/code-the-diamond-square-algorithm/
+
+	featureSize = std::min(featureSize, height);
+
+	std::vector<float> newHeightmap(width * height);
+
+	// Create initial seed values
+	for (int y = 0; y < height; y += featureSize)
+		for (int x = 0; x < width; x += featureSize)
+			newHeightmap[y * width + x] = frand();
+
+	// SD Algorithm
+	float i = 5.0f;
+	while (featureSize > 1)
+	{
+		const unsigned int half = featureSize / 2;
+
+		// Square
+		for (int y = half; y < height; y += featureSize)
+			for (int x = half; x < width; x += featureSize)
+				SquareStage(newHeightmap, x % width, y % height, half, width, i);
+
+		// Diamond
+		int col = 0;
+		for (int x = 0; x < width; x += half)
+		{
+			++col;
+
+			//If this is an odd column.
+			if (col % 2 == 1)
+				for (int y = half; y < height; y += featureSize)
+					DiamondStage(newHeightmap, x % width, y % height, half, width, i);
+			else
+				for (int y = 0; y < height; y += featureSize)
+					DiamondStage(newHeightmap, x % width, y % height, half, width, i);
+		}
+
+		featureSize /= 2;
+		i += 2.5f;
+	}
+
+	float highest = 0.0f;
+	for (const auto v : newHeightmap)
+		highest = std::max(v, highest);
+
+	for (auto& v : newHeightmap)
+	{
+		v /= highest;
+		v *= 255.0f;
+	}
+
+	Heightmap = std::vector<unsigned char>(newHeightmap.begin(), newHeightmap.end());
+	HeightmapSize = width;
+	CreateSrvFromHeightmapData();
+}
+
+void PlaneMeshGeneratorComponent::SquareStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration)
+{
+	int count = 0;
+	float avg = 0.0f;
+
+	if (x - reach >= 0 && y - reach >= 0)
+	{
+		avg += hm[(y - reach) * size + (x - reach)];
+		count++;
+	}
+	if (x - reach >= 0 && y + reach < size)
+	{
+		avg += hm[(y + reach) * size + (x - reach)];
+		count++;
+	}
+	if (x + reach < size && y - reach >= 0)
+	{
+		avg += hm[(y - reach) * size + (x + reach)];
+		count++;
+	}
+	if (x + reach < size && y + reach < size)
+	{
+		avg += hm[(y + reach) * size + (x + reach)];
+		count++;
+	}
+
+	avg += frand() / iteration;
+	avg /= count;
+
+	hm[y * size + x] = avg;
+}
+
+void PlaneMeshGeneratorComponent::DiamondStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration)
+{
+	int count = 0;
+	float avg = 0.0f;
+
+	if (x - reach >= 0)
+	{
+		avg += hm[y * size + (x - reach)];
+		count++;
+	}
+	if (x + reach < size)
+	{
+		avg += hm[y * size + (x + reach)];
+		count++;
+	}
+	if (y - reach >= 0)
+	{
+		avg += hm[(y - reach) * size + x];
+		count++;
+	}
+	if (y + reach < size)
+	{
+		avg += hm[(y + reach) * size + x];
+		count++;
+	}
+
+	avg += frand() / iteration;
+	avg /= count;
+
+	hm[y * size + x] = avg;
 }
 
 void PlaneMeshGeneratorComponent::CreateSrvFromHeightmapData()
@@ -266,8 +386,39 @@ unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(float normx, float no
 	                       static_cast<int>(y * HeightmapSize));
 }
 
+unsigned char PlaneMeshGeneratorComponent::WrapSampleHeightmap(int x, int y) const
+{
+	if (HeightmapSize == 0)
+		return 0;
+
+	// Handle underflow
+	if (x < 0)
+		x = HeightmapSize - x;
+	if (y < 0)
+		y = HeightmapSize - y;
+
+	// Handle overflow
+	x %= HeightmapSize;
+	y %= HeightmapSize;
+
+	const int index = y * HeightmapSize + x;
+	if (index >= Heightmap.size())
+		throw std::out_of_range("Current values somehow still out of range.");
+
+	return Heightmap[index];
+}
+
+unsigned char PlaneMeshGeneratorComponent::WrapSampleHeightmap(float normx, float normy) const
+{
+	return WrapSampleHeightmap(static_cast<int>(normx * HeightmapSize),
+	                           static_cast<int>(normy * HeightmapSize));
+}
+
 DirectX::SimpleMath::Vector3 PlaneMeshGeneratorComponent::CalculateNormalAt(int x, int y) const
 {
+	if (!HeightmapSize)
+		return DirectX::SimpleMath::Vector3::Up;
+
 	const unsigned char sx = SampleHeightmap(x % HeightmapSize, y) - SampleHeightmap(x != 0 ? x - 1 : HeightmapSize - 1, y);
 	const unsigned char sy = SampleHeightmap(x, y % HeightmapSize) - SampleHeightmap(x, y != 0 ? y - 1 : HeightmapSize - 1);
 
