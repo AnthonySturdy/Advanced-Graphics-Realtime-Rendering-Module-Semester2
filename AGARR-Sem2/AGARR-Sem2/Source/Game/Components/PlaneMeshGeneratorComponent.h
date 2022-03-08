@@ -33,6 +33,7 @@ private:
 	void GenerateDiamondSquareHeightmap(unsigned int width = 513, unsigned int height = 513, unsigned int featureSize = 128);
 	void SquareStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration);
 	void DiamondStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration);
+	void GeneratePerlinHeightmap(unsigned int width = 512, unsigned int height = 512, unsigned int iterations = 5);
 
 	void CreateSrvFromHeightmapData();
 

@@ -44,6 +44,7 @@
     <ClInclude Include="Source\Game\Components\PlaneMeshGeneratorComponent.h" />
     <ClInclude Include="Source\Core\InputManager.h" />
     <ClInclude Include="Source\Game\Components\MouseLookComponent.h" />
+    <ClInclude Include="Source\Utility\PerlinNoise.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\pch.cpp" />

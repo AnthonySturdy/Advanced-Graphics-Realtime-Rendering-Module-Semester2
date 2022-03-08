@@ -3,6 +3,7 @@
 
 #include "MeshRendererComponent.h"
 #include "Rendering/Mesh.h"
+#include "Utility/PerlinNoise.h"
 
 PlaneMeshGeneratorComponent::PlaneMeshGeneratorComponent()
 {
@@ -69,7 +70,7 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 	case 3:
 		if (ImGui::Button("Generate Heightmap"))
 		{
-			// Perlin
+			GeneratePerlinHeightmap();
 		}
 		break;
 	}
@@ -251,6 +252,7 @@ void PlaneMeshGeneratorComponent::GenerateDiamondSquareHeightmap(unsigned int wi
 		i += 2.5f;
 	}
 
+	// Normalise heightmap
 	float highest = 0.0f;
 	for (const auto v : newHeightmap)
 		highest = std::max(v, highest);
@@ -328,6 +330,37 @@ void PlaneMeshGeneratorComponent::DiamondStage(std::vector<float>& hm, int x, in
 	avg /= count;
 
 	hm[y * size + x] = avg;
+}
+
+void PlaneMeshGeneratorComponent::GeneratePerlinHeightmap(unsigned width, unsigned height, unsigned iterations)
+{
+	std::vector<float> newHeightmap(width * height);
+
+	PerlinNoise::seed(rand());
+
+	for (int x = 0; x < width; ++x)
+		for (int y = 0; y < height; ++y)
+			for (int i = 0; i < iterations; ++i)
+			{
+				const double sampleScale = std::pow(2.0, i + 4.0);
+				const double sampleStrength = (iterations - i) * 5.0f;
+				newHeightmap[y * width + x] += PerlinNoise::noise(x / sampleScale, y / sampleScale, 0) / (i == iterations - 1 ? 1 : sampleStrength);
+			}
+
+	// Normalise heightmap
+	float highest = 0.0f;
+	for (const auto v : newHeightmap)
+		highest = std::max(v, highest);
+
+	for (auto& v : newHeightmap)
+	{
+		v /= highest;
+		v *= 255.0f;
+	}
+
+	Heightmap = std::vector<unsigned char>(newHeightmap.begin(), newHeightmap.end());
+	HeightmapSize = width;
+	CreateSrvFromHeightmapData();
 }
 
 void PlaneMeshGeneratorComponent::CreateSrvFromHeightmapData()
