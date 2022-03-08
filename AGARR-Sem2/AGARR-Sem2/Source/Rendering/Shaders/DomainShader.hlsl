@@ -18,11 +18,13 @@ cbuffer TerrainConstantBuffer : register(b2)
 {
     bool ApplyHeightmap;
     float HeightmapScale;
+    uint NumTextures;
 };
 
 struct PS_INPUT
 {
-    float4 Pos : SV_POSITION;
+    float4 ScreenPos : SV_POSITION;
+    float3 WorldPos : TEXCOORD1;
     float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
 };
@@ -47,7 +49,7 @@ float3 CalculateNormal(float2 texCoord)
     float sx = HeightmapTex.SampleLevel(Sampler, texCoord + float2(0.005f, 0), 0) - HeightmapTex.SampleLevel(Sampler, texCoord - float2(0.005f, 0), 0);
     float sy = HeightmapTex.SampleLevel(Sampler, texCoord + float2(0, 0.005f), 0) - HeightmapTex.SampleLevel(Sampler, texCoord - float2(0, 0.005f), 0);
 
-    float3 normal = float3(sx * HeightmapScale, 1.0f, sy * HeightmapScale);
+    float3 normal = float3(sx * (HeightmapScale / 10.0f), 1.0f, sy * (HeightmapScale / 10.0f));
     return normalize(normal);
 }
 
@@ -67,7 +69,7 @@ PS_INPUT main(
 							 patch[1].TexCoord * domain.y +
 							 patch[2].TexCoord * domain.z).xy;
 
-    Output.Pos = float4((patch[0].Pos * domain.x +
+    Output.ScreenPos = float4((patch[0].Pos * domain.x +
 						patch[1].Pos * domain.y +
 						patch[2].Pos * domain.z).xyz,
 						1.0f);
@@ -75,15 +77,16 @@ PS_INPUT main(
     if(ApplyHeightmap)
     {
         float4 texCol = HeightmapTex.SampleLevel(Sampler, Output.TexCoord, 0);
-        Output.Pos.y = texCol.r * HeightmapScale;
+        Output.ScreenPos.y = texCol.r * HeightmapScale;
 
         Output.Normal = CalculateNormal(Output.TexCoord);
 
     }
 
-    Output.Pos = mul(Output.Pos, World);
-    Output.Pos = mul(Output.Pos, View);
-    Output.Pos = mul(Output.Pos, Projection);
+    Output.WorldPos = mul(Output.ScreenPos, World);
+    Output.ScreenPos = mul(Output.ScreenPos, World);
+    Output.ScreenPos = mul(Output.ScreenPos, View);
+    Output.ScreenPos = mul(Output.ScreenPos, Projection);
 
 	return Output;
 }

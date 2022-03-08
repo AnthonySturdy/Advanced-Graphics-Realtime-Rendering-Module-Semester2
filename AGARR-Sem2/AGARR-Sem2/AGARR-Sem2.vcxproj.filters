@@ -45,6 +45,8 @@
     <ClInclude Include="Source\Core\InputManager.h" />
     <ClInclude Include="Source\Game\Components\MouseLookComponent.h" />
     <ClInclude Include="Source\Utility\PerlinNoise.h" />
+    <ClInclude Include="Source\Game\Components\TerrainWalkComponent.h" />
+    <ClInclude Include="Source\Game\Components\MaterialComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\pch.cpp" />
@@ -74,6 +76,8 @@
     <ClCompile Include="Source\Game\Components\PlaneMeshGeneratorComponent.cpp" />
     <ClCompile Include="Source\Core\InputManager.cpp" />
     <ClCompile Include="Source\Game\Components\MouseLookComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\TerrainWalkComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\MaterialComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

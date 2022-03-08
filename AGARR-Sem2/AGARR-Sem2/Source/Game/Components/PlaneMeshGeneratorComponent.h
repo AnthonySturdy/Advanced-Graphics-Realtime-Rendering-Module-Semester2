@@ -7,7 +7,8 @@ class PlaneMeshGeneratorComponent : public Component
 	{
 		BOOL ApplyHeightmap{ false };
 		float HeightmapScale{ 0.15f };
-		float padding[2] = {};
+		unsigned int NumTextures{ 0u };
+		float padding{};
 	};
 
 public:
@@ -19,8 +20,19 @@ public:
 	~PlaneMeshGeneratorComponent() override = default;
 
 	void Update(float deltaTime) override {};
-	void Render() override {};
+	void Render() override;
 	void RenderGUI() override;
+
+	[[nodiscard]] bool IsHeightmapUsed() const { return UseHeightmap; }
+	[[nodiscard]] unsigned int GetHeightmapSize() const { return HeightmapSize; }
+	[[nodiscard]] float GetHeightmapVerticalScale() const { return HeightmapVerticalScale; }
+
+	[[nodiscard]] DirectX::SimpleMath::Vector2 GetPlaneSize() const { return DirectX::SimpleMath::Vector2(PlaneSize[0], PlaneSize[1]); }
+
+	[[nodiscard]] unsigned char SampleHeightmap(int x, int y) const;
+	[[nodiscard]] unsigned char SampleHeightmap(float normx, float normy) const;
+	[[nodiscard]] unsigned char WrapSampleHeightmap(int x, int y) const;
+	[[nodiscard]] unsigned char WrapSampleHeightmap(float normx, float normy) const;
 
 protected:
 	[[nodiscard]] constexpr std::string GetComponentName() override { return "Plane Mesh Generator"; }
@@ -37,11 +49,6 @@ private:
 
 	void CreateSrvFromHeightmapData();
 
-	[[nodiscard]] unsigned char SampleHeightmap(int x, int y) const;
-	[[nodiscard]] unsigned char SampleHeightmap(float normx, float normy) const;
-	[[nodiscard]] unsigned char WrapSampleHeightmap(int x, int y) const;
-	[[nodiscard]] unsigned char WrapSampleHeightmap(float normx, float normy) const;
-
 	[[nodiscard]] DirectX::SimpleMath::Vector3 CalculateNormalAt(int x, int y) const;
 	[[nodiscard]] DirectX::SimpleMath::Vector3 CalculateNormalAt(float normx, float normy) const;
 
@@ -51,6 +58,9 @@ private:
 	bool StaticHeightmap{ false };
 	unsigned int HeightmapSize = 0;
 	float HeightmapVerticalScale{ 0.15f };
+
+	int PlaneSize[2]{ 1, 1 };
+
 	std::vector<unsigned char> Heightmap{};
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> HeightmapSRV{};
 	TerrainConstantBuffer TerrainCBufferData;

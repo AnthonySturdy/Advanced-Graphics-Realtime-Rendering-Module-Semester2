@@ -7,6 +7,8 @@
 #include "Game/Components/PlaneMeshGeneratorComponent.h"
 #include "Game/Components/TransformComponent.h"
 #include "Game/Components/MouseLookComponent.h"
+#include "Game/Components/TerrainWalkComponent.h"
+#include "Game/Components/MaterialComponent.h"
 #include "Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
@@ -65,11 +67,27 @@ void Game::Initialize(HWND window, int width, int height)
 	TransformComponent* camTransf = cam->GetComponent<TransformComponent>();
 	camTransf->SetPosition(SimpleMath::Vector3(2.0f, 2.0f, 2.0f));
 	cam->AddComponent(new MouseLookComponent());
+	const auto terrainWalk = cam->AddComponent(new TerrainWalkComponent());
 
 	GameObjects.push_back(new GameObject());
 	const auto cube = GameObjects[1];
+	const auto cubeMat = cube->AddComponent(new MaterialComponent());
+	cubeMat->AddTexture(L"Resources/darkdirt.dds");
+	cubeMat->AddTexture(L"Resources/lightdirt.dds");
+	cubeMat->AddTexture(L"Resources/grass.dds");
+	cubeMat->AddTexture(L"Resources/stone.dds");
+	cubeMat->AddTexture(L"Resources/snow.dds");
+	const auto planeMeshGen = cube->AddComponent(new PlaneMeshGeneratorComponent());
 	cube->AddComponent(new MeshRendererComponent());
-	cube->AddComponent(new PlaneMeshGeneratorComponent());
+
+	terrainWalk->SetPlaneGenerator(planeMeshGen);
+
+	GameObjects.push_back(new GameObject());
+	const auto water = GameObjects[2];
+	const auto waterMat = water->AddComponent(new MaterialComponent());
+	waterMat->AddTexture(L"Resources/darkdirt.dds");
+	water->AddComponent(new PlaneMeshGeneratorComponent());
+	water->AddComponent(new MeshRendererComponent());
 
 	// Vsync
 	m_timer.SetFixedTimeStep(true);

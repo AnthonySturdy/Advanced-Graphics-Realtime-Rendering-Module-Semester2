@@ -37,6 +37,7 @@ void MeshRendererComponent::Render()
 
 	// Bind sampler
 	const auto sampler = MeshShader->GetSamplerState();
+	context->DSSetSamplers(0, 1, &sampler);
 	context->PSSetSamplers(0, 1, &sampler);
 
 	// Bind vertex and index buffers

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "PlaneMeshGeneratorComponent.h"
 
+#include "MaterialComponent.h"
 #include "MeshRendererComponent.h"
 #include "Rendering/Mesh.h"
 #include "Utility/PerlinNoise.h"
@@ -15,6 +16,35 @@ PlaneMeshGeneratorComponent::PlaneMeshGeneratorComponent()
 	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bd.CPUAccessFlags = 0;
 	DX::ThrowIfFailed(device->CreateBuffer(&bd, nullptr, TerrainCBuffer.ReleaseAndGetAddressOf()));
+}
+
+void PlaneMeshGeneratorComponent::Render()
+{
+	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
+
+	TerrainCBufferData.NumTextures = Parent->GetComponent<MaterialComponent>()->GetNumTextures();
+
+	if (!UseHeightmap)
+	{
+		ID3D11ShaderResourceView* nsrv = nullptr;
+		context->DSSetShaderResources(0, 1, &nsrv);
+
+		TerrainCBufferData.ApplyHeightmap = false;
+		TerrainCBufferData.HeightmapScale = 0.0f;
+		context->UpdateSubresource(TerrainCBuffer.Get(), 0, nullptr, &TerrainCBufferData, 0, 0);
+		context->DSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
+		context->PSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
+		return;
+	}
+
+	// Update shader resources
+	context->DSSetShaderResources(0, 1, HeightmapSRV.GetAddressOf());
+
+	TerrainCBufferData.ApplyHeightmap = !StaticHeightmap;
+	TerrainCBufferData.HeightmapScale = HeightmapVerticalScale;
+	context->UpdateSubresource(TerrainCBuffer.Get(), 0, nullptr, &TerrainCBufferData, 0, 0);
+	context->DSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
+	context->PSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
 }
 
 void PlaneMeshGeneratorComponent::RenderGUI()
@@ -88,25 +118,12 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 	}
 
 	// Plane Size
-	static int planeSz[2]{ 1, 1 };
-	ImGui::DragInt2("Plane Size", &planeSz[0], 1, 1, UseHeightmap ? HeightmapSize : INT16_MAX);
+	ImGui::DragInt2("Plane Size", &PlaneSize[0], 1, 1, UseHeightmap ? HeightmapSize : INT16_MAX);
 
 	// Plane generation
 	if (ImGui::Button("Generate Plane"))
 	{
-		GeneratePlane(planeSz[0], planeSz[1], UseHeightmap, HeightmapVerticalScale);
-
-		// Update shader resources
-		const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
-		ID3D11ShaderResourceView* nsrv = nullptr;
-		context->DSSetShaderResources(0, 1, &nsrv);
-		if (UseHeightmap)
-			context->DSSetShaderResources(0, 1, HeightmapSRV.GetAddressOf());
-
-		TerrainCBufferData.ApplyHeightmap = !StaticHeightmap;
-		TerrainCBufferData.HeightmapScale = HeightmapVerticalScale;
-		context->UpdateSubresource(TerrainCBuffer.Get(), 0, nullptr, &TerrainCBufferData, 0, 0);
-		context->DSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
+		GeneratePlane(PlaneSize[0], PlaneSize[1], UseHeightmap, HeightmapVerticalScale);
 	}
 }
 

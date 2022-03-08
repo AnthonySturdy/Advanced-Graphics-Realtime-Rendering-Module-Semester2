@@ -48,6 +48,7 @@
 #include "SimpleMath.h"
 #include "Keyboard.h"
 #include "Mouse.h"
+#include "DDSTextureLoader.h"
 
 #include <algorithm>
 #include <cmath>
