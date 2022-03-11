@@ -33,6 +33,10 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
 {
 	HS_CONSTANT_DATA_OUTPUT Output;
 
+	/***********************************************
+	MARKING SCHEME: Use of Tessellation shaders with Level of Detail
+	DESCRIPTION:	Adjusts tesselation factor to adjust LOD based on distance of patch from camera.
+	***********************************************/
     Output.EdgeTessFactor[0] =
 		Output.EdgeTessFactor[1] =
 		Output.EdgeTessFactor[2] =

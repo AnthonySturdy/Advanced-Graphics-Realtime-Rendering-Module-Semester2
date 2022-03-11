@@ -3,6 +3,12 @@
 #include <typeindex>
 #include <vector>
 
+/***********************************************
+MARKING SCHEME: System Architecture and code style
+DESCRIPTION:	Component system used to keep code modular, uses templates so some
+				functionality is required to be in header file.
+***********************************************/
+
 class GameObject;
 
 class Component

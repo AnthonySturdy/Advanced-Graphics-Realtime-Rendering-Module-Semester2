@@ -176,6 +176,10 @@ void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useH
 	mesh->Initialise(newVerts, newIndices);
 }
 
+/***********************************************
+MARKING SCHEME: Terrain construction
+DESCRIPTION:	Loads heightmap from .RAW file, applied in domain shader, rendered in MeshRendererComponent.cpp
+***********************************************/
 void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 {
 	if (std::ifstream inFile(path.c_str(), std::ios_base::binary); inFile)
@@ -191,6 +195,10 @@ void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 	CreateSrvFromHeightmapData();
 }
 
+/***********************************************
+MARKING SCHEME: Procedural terrain generation
+DESCRIPTION:	Generates heightmap using Fault Formation, Diamond Square, and Perlin Noise techniques.
+***********************************************/
 void PlaneMeshGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int width, unsigned int height, unsigned int iterations)
 {
 	std::vector<float> newHeightmap(width * height);
