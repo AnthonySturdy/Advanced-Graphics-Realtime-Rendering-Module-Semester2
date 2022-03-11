@@ -9,6 +9,7 @@ struct HS_INPUT
     float4 Pos : SV_POSITION;
     float3 Norm : NORMAL;
     float2 TexCoord : TEXCOORD0;
+    float depth : TEXCOORD1;
 };
 
 struct HS_CONTROL_POINT_OUTPUT
@@ -32,10 +33,10 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
 {
 	HS_CONSTANT_DATA_OUTPUT Output;
 
-	Output.EdgeTessFactor[0] = 
-		Output.EdgeTessFactor[1] = 
-		Output.EdgeTessFactor[2] = 
-		Output.InsideTessFactor = TessellationAmount;
+    Output.EdgeTessFactor[0] =
+		Output.EdgeTessFactor[1] =
+		Output.EdgeTessFactor[2] =
+		Output.InsideTessFactor = clamp(TessellationAmount - (ip[0].depth / 2), 1, TessellationAmount);
 
 	return Output;
 }

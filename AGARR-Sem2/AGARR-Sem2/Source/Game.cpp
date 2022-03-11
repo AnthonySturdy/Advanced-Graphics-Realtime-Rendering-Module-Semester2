@@ -85,7 +85,7 @@ void Game::Initialize(HWND window, int width, int height)
 	GameObjects.push_back(new GameObject());
 	const auto water = GameObjects[2];
 	const auto waterMat = water->AddComponent(new MaterialComponent());
-	waterMat->AddTexture(L"Resources/darkdirt.dds");
+	waterMat->AddTexture(L"Resources/water.dds");
 	water->AddComponent(new PlaneMeshGeneratorComponent());
 	water->AddComponent(new MeshRendererComponent());
 

@@ -27,7 +27,7 @@ public:
 private:
 	void CreateMeshBuffers();
 
-	void LoadDataFromOBJ(std::wstring path);
+	void LoadDataFromOBJ(const std::wstring& path);
 
 	std::vector<Vertex> Vertices{};
 	std::vector<UINT> Indices{};

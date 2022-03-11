@@ -52,7 +52,7 @@ void Mesh::CreateMeshBuffers()
 	DX::ThrowIfFailed(device->CreateBuffer(&bd, &InitData, IndexBuffer.ReleaseAndGetAddressOf()));
 }
 
-void Mesh::LoadDataFromOBJ(std::wstring path)
+void Mesh::LoadDataFromOBJ(const std::wstring& path)
 {
 	WaveFrontReader<UINT> objReader{};
 	objReader.Load(path.c_str(), true);

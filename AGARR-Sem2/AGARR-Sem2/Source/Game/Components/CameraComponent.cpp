@@ -38,6 +38,7 @@ void CameraComponent::Render()
 	static CameraConstantBuffer ccb = {};
 	ccb.View = XMMatrixTranspose(GetViewMatrix());
 	ccb.Projection = XMMatrixTranspose(GetProjectionMatrix());
+	ccb.EyePos = Parent->GetComponent<TransformComponent>()->GetPosition();
 
 	context->UpdateSubresource(ConstantBuffer.Get(), 0, nullptr, &ccb, 0, 0);
 

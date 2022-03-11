@@ -6,6 +6,7 @@ cbuffer CameraConstantBuffer : register(b0)
 {
     matrix View;
     matrix Projection;
+    float3 EyePos;
 }
 
 cbuffer PerObjectConstantBuffer : register(b1)

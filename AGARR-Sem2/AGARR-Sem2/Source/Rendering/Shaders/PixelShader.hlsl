@@ -1,3 +1,4 @@
+#define MAX_TEXTURES 10
 Texture2D tx0 : register(t0);
 Texture2D tx1 : register(t1);
 Texture2D tx2 : register(t2);
@@ -10,8 +11,6 @@ Texture2D tx8 : register(t8);
 Texture2D tx9 : register(t9);
 
 SamplerState Sampler : register(s0);
-
-#define MAX_TEXTURES 10
 
 cbuffer TerrainConstantBuffer : register(b2)
 {

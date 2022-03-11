@@ -7,6 +7,8 @@ class CameraComponent : public Component
 	{
 		DirectX::SimpleMath::Matrix View{ DirectX::SimpleMath::Matrix::Identity };
 		DirectX::SimpleMath::Matrix Projection{ DirectX::SimpleMath::Matrix::Identity };
+		DirectX::SimpleMath::Vector3 EyePos{ DirectX::SimpleMath::Vector3::Zero };
+		float padding{};
 	};
 
 public:
