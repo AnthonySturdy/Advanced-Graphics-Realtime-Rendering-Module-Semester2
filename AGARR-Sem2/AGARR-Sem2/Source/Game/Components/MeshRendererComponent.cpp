@@ -20,6 +20,7 @@ void MeshRendererComponent::Render()
 	static PerObjectConstantBuffer pocb = {};
 	pocb.World = XMMatrixTranspose(Parent->GetComponent<TransformComponent>()->GetWorldMatrix());
 	pocb.TessellationAmount = TessellationAmount;
+	pocb.TesselationFalloff = TesselationFalloff;
 	context->UpdateSubresource(ConstantBuffer.Get(), 0, nullptr, &pocb, 0, 0);
 
 	context->VSSetConstantBuffers(1, 1, ConstantBuffer.GetAddressOf());
@@ -79,6 +80,8 @@ void MeshRendererComponent::RenderGUI()
 	}
 
 	ImGui::SliderFloat("Tessellation Amount", &TessellationAmount, 1.0f, 32.0f);
+
+	ImGui::SliderFloat("Tessellation Falloff", &TesselationFalloff, 1.0f, 32.0f);
 }
 
 void MeshRendererComponent::CreateConstantBuffer()

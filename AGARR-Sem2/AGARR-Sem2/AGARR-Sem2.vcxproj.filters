@@ -41,12 +41,14 @@
     <ClInclude Include="External\imgui\ImGuiFileDialog-0.6.4\stb\stb_image_resize.h" />
     <ClInclude Include="External\imgui\ImGuiFileDialog-0.6.4\ImGuiFileDialog.h" />
     <ClInclude Include="External\imgui\ImGuiFileDialog-0.6.4\ImGuiFileDialogConfig.h" />
-    <ClInclude Include="Source\Game\Components\PlaneMeshGeneratorComponent.h" />
+    <ClInclude Include="Source\Game\Components\HeightmapGeneratorComponent.h" />
     <ClInclude Include="Source\Core\InputManager.h" />
     <ClInclude Include="Source\Game\Components\MouseLookComponent.h" />
     <ClInclude Include="Source\Utility\PerlinNoise.h" />
     <ClInclude Include="Source\Game\Components\TerrainWalkComponent.h" />
     <ClInclude Include="Source\Game\Components\MaterialComponent.h" />
+    <ClInclude Include="Source\Game\Components\VoxelTerrainGeneratorComponent.h" />
+    <ClInclude Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\pch.cpp" />
@@ -73,11 +75,13 @@
     <ClCompile Include="External\imgui\imgui_tables.cpp" />
     <ClCompile Include="External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="External\imgui\ImGuiFileDialog-0.6.4\ImGuiFileDialog.cpp" />
-    <ClCompile Include="Source\Game\Components\PlaneMeshGeneratorComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\HeightmapGeneratorComponent.cpp" />
     <ClCompile Include="Source\Core\InputManager.cpp" />
     <ClCompile Include="Source\Game\Components\MouseLookComponent.cpp" />
     <ClCompile Include="Source\Game\Components\TerrainWalkComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MaterialComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\VoxelTerrainGeneratorComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

@@ -9,7 +9,8 @@ class MeshRendererComponent : public Component
 	{
 		DirectX::SimpleMath::Matrix World{ DirectX::SimpleMath::Matrix::Identity };
 		float TessellationAmount{ 1.0f };
-		float padding[3]{};
+		float TesselationFalloff{ 7.5f };
+		float padding[2]{};
 	};
 
 public:
@@ -35,7 +36,8 @@ private:
 
 	std::shared_ptr<Mesh> MeshData{ nullptr };
 	std::shared_ptr<Shader> MeshShader{ nullptr };
-	float TessellationAmount{ 1.0f };
+	float TessellationAmount{ 5.0f };
+	float TesselationFalloff{ 7.5f };
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer;
 };

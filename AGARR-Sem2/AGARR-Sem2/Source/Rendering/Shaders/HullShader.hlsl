@@ -2,6 +2,7 @@ cbuffer PerObjectConstantBuffer : register(b1)
 {
     matrix World;
     float TessellationAmount;
+	float TesselationFalloff;
 }
 
 struct HS_INPUT
@@ -40,7 +41,7 @@ HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
     Output.EdgeTessFactor[0] =
 		Output.EdgeTessFactor[1] =
 		Output.EdgeTessFactor[2] =
-		Output.InsideTessFactor = clamp(TessellationAmount - (ip[0].depth / 2), 1, TessellationAmount);
+		Output.InsideTessFactor = clamp(TessellationAmount - (ip[0].depth / TesselationFalloff), 1, TessellationAmount);
 
 	return Output;
 }

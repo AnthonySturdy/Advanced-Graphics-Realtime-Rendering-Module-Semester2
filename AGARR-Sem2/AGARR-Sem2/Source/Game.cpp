@@ -4,11 +4,12 @@
 #include "Core/InputManager.h"
 #include "Game/Components/CameraComponent.h"
 #include "Game/Components/MeshRendererComponent.h"
-#include "Game/Components/PlaneMeshGeneratorComponent.h"
+#include "Game/Components/HeightmapGeneratorComponent.h"
 #include "Game/Components/TransformComponent.h"
 #include "Game/Components/MouseLookComponent.h"
 #include "Game/Components/TerrainWalkComponent.h"
 #include "Game/Components/MaterialComponent.h"
+#include "Game/Components/PlaneTerrainMeshGeneratorComponent.h"
 #include "Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
@@ -77,16 +78,19 @@ void Game::Initialize(HWND window, int width, int height)
 	cubeMat->AddTexture(L"Resources/grass.dds");
 	cubeMat->AddTexture(L"Resources/stone.dds");
 	cubeMat->AddTexture(L"Resources/snow.dds");
-	const auto planeMeshGen = cube->AddComponent(new PlaneMeshGeneratorComponent());
+	const auto hmGen = cube->AddComponent(new HeightmapGeneratorComponent());
+	const auto planeGen = cube->AddComponent(new PlaneTerrainMeshGeneratorComponent());
 	cube->AddComponent(new MeshRendererComponent());
 
-	terrainWalk->SetPlaneGenerator(planeMeshGen);
+	terrainWalk->SetHeightmapGenerator(hmGen);
+	terrainWalk->SetPlaneGenerator(planeGen);
 
 	GameObjects.push_back(new GameObject());
 	const auto water = GameObjects[2];
 	const auto waterMat = water->AddComponent(new MaterialComponent());
 	waterMat->AddTexture(L"Resources/water.dds");
-	water->AddComponent(new PlaneMeshGeneratorComponent());
+	water->AddComponent(new HeightmapGeneratorComponent());
+	water->AddComponent(new PlaneTerrainMeshGeneratorComponent());
 	water->AddComponent(new MeshRendererComponent());
 
 	// Vsync

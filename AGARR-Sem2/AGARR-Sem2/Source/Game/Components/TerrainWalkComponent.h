@@ -1,6 +1,7 @@
 #pragma once
 #include "Game/GameObject.h"
-#include "PlaneMeshGeneratorComponent.h"
+#include "HeightmapGeneratorComponent.h"
+#include "PlaneTerrainMeshGeneratorComponent.h"
 
 class TerrainWalkComponent : public Component
 {
@@ -12,7 +13,8 @@ public:
 	TerrainWalkComponent& operator=(TerrainWalkComponent&&) = default;
 	~TerrainWalkComponent() override = default;
 
-	void SetPlaneGenerator(PlaneMeshGeneratorComponent* planeGenComp) { PlaneMeshGenerator = planeGenComp; }
+	void SetHeightmapGenerator(HeightmapGeneratorComponent* hmGenComp) { HeightmapGenerator = hmGenComp; }
+	void SetPlaneGenerator(PlaneTerrainMeshGeneratorComponent* planeGenComp) { PlaneMeshGenerator = planeGenComp; }
 
 	void Update(float deltaTime) override;
 	void Render() override {};
@@ -22,7 +24,8 @@ protected:
 	[[nodiscard]] constexpr std::string GetComponentName() override { return "Terrain Walk"; }
 
 private:
-	PlaneMeshGeneratorComponent* PlaneMeshGenerator{ nullptr };
+	HeightmapGeneratorComponent* HeightmapGenerator{ nullptr };
+	PlaneTerrainMeshGeneratorComponent* PlaneMeshGenerator{ nullptr };
 
 	float DistanceAboveTerrain{ 1.0f };
 	float WalkSpeed{ .3f };

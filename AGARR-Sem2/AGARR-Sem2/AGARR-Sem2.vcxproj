@@ -195,10 +195,11 @@
     <ClInclude Include="External\imgui\imstb_truetype.h" />
     <ClInclude Include="External\imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="External\imgui\misc\single_file\imgui_single_file.h" />
+    <ClInclude Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.h" />
     <ClInclude Include="Source\Game\Components\MaterialComponent.h" />
     <ClInclude Include="Source\Game\Components\MouseLookComponent.h" />
     <ClInclude Include="Source\Core\InputManager.h" />
-    <ClInclude Include="Source\Game\Components\PlaneMeshGeneratorComponent.h" />
+    <ClInclude Include="Source\Game\Components\HeightmapGeneratorComponent.h" />
     <ClInclude Include="Source\Game\Components\CameraComponent.h" />
     <ClInclude Include="Source\Rendering\Shader.h" />
     <ClInclude Include="Source\Rendering\Mesh.h" />
@@ -213,6 +214,7 @@
     <ClInclude Include="Source\Utility\StepTimer.h" />
     <ClInclude Include="Source\Game\Components\TransformComponent.h" />
     <ClInclude Include="Source\Game\Components\TerrainWalkComponent.h" />
+    <ClInclude Include="Source\Game\Components\VoxelTerrainGeneratorComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="External\imgui\backends\imgui_impl_dx11.cpp">
@@ -275,10 +277,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MaterialComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MouseLookComponent.cpp" />
     <ClCompile Include="Source\Core\InputManager.cpp" />
-    <ClCompile Include="Source\Game\Components\PlaneMeshGeneratorComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\HeightmapGeneratorComponent.cpp" />
     <ClCompile Include="Source\Game\Components\CameraComponent.cpp" />
     <ClCompile Include="Source\Rendering\Shader.cpp" />
     <ClCompile Include="Source\Rendering\Mesh.cpp">
@@ -346,6 +349,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="Source\Game\Components\TerrainWalkComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\VoxelTerrainGeneratorComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

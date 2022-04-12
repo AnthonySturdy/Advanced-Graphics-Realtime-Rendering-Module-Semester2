@@ -38,9 +38,9 @@ void TerrainWalkComponent::Update(float deltaTime)
 		moveDir.x = -1.0f;
 	}
 
-	const DirectX::SimpleMath::Vector2 normPlanePosition((transform->GetPosition().x / PlaneMeshGenerator->GetPlaneSize().x),
-	                                                     (transform->GetPosition().z / PlaneMeshGenerator->GetPlaneSize().y));
-	const float heightmapHeight = (static_cast<float>(PlaneMeshGenerator->SampleHeightmap(normPlanePosition.x, normPlanePosition.y)) / 255.0f) * PlaneMeshGenerator->GetHeightmapVerticalScale();
+	const DirectX::SimpleMath::Vector2 normPlanePosition((transform->GetPosition().x / (PlaneMeshGenerator->GetPlaneSize().x * PlaneMeshGenerator->GetQuadSize())),
+	                                                     (transform->GetPosition().z / (PlaneMeshGenerator->GetPlaneSize().y * PlaneMeshGenerator->GetQuadSize())));
+	const float heightmapHeight = (static_cast<float>(HeightmapGenerator->SampleHeightmap(normPlanePosition.x, normPlanePosition.y)) / 255.0f) * PlaneMeshGenerator->GetHeightmapVerticalScale();
 	auto curPos = transform->GetPosition();
 	curPos.y = heightmapHeight + DistanceAboveTerrain;
 	transform->SetPosition(curPos + (camForward * moveDir.z + camRight * moveDir.x) * WalkSpeed);

@@ -1,53 +1,9 @@
 #include "pch.h"
-#include "PlaneMeshGeneratorComponent.h"
+#include "HeightmapGeneratorComponent.h"
 
-#include "MaterialComponent.h"
-#include "MeshRendererComponent.h"
-#include "Rendering/Mesh.h"
 #include "Utility/PerlinNoise.h"
 
-PlaneMeshGeneratorComponent::PlaneMeshGeneratorComponent()
-{
-	const auto device = DX::DeviceResources::Instance()->GetD3DDevice();
-
-	D3D11_BUFFER_DESC bd = {};
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(TerrainConstantBuffer);
-	bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bd.CPUAccessFlags = 0;
-	DX::ThrowIfFailed(device->CreateBuffer(&bd, nullptr, TerrainCBuffer.ReleaseAndGetAddressOf()));
-}
-
-void PlaneMeshGeneratorComponent::Render()
-{
-	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
-
-	TerrainCBufferData.NumTextures = Parent->GetComponent<MaterialComponent>()->GetNumTextures();
-
-	if (!UseHeightmap)
-	{
-		ID3D11ShaderResourceView* nsrv = nullptr;
-		context->DSSetShaderResources(0, 1, &nsrv);
-
-		TerrainCBufferData.ApplyHeightmap = false;
-		TerrainCBufferData.HeightmapScale = 0.0f;
-		context->UpdateSubresource(TerrainCBuffer.Get(), 0, nullptr, &TerrainCBufferData, 0, 0);
-		context->DSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
-		context->PSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
-		return;
-	}
-
-	// Update shader resources
-	context->DSSetShaderResources(0, 1, HeightmapSRV.GetAddressOf());
-
-	TerrainCBufferData.ApplyHeightmap = !StaticHeightmap;
-	TerrainCBufferData.HeightmapScale = HeightmapVerticalScale;
-	context->UpdateSubresource(TerrainCBuffer.Get(), 0, nullptr, &TerrainCBufferData, 0, 0);
-	context->DSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
-	context->PSSetConstantBuffers(2, 1, TerrainCBuffer.GetAddressOf());
-}
-
-void PlaneMeshGeneratorComponent::RenderGUI()
+void HeightmapGeneratorComponent::RenderGUI()
 {
 	// Heightmap Generation/Selection
 	const char* heightmapSourceListItems[] = { ".RAW File", "Fault Formation", "Diamond Square", "Perlin Noise" };
@@ -82,7 +38,7 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 				for (int i = 0; i < filePath.size(); ++i)
 					path[i] = filePath[i];
 
-				LoadHeightmap(std::wstring(filePath.begin(), filePath.end()));
+				LoadHeightmapFromFile(std::wstring(filePath.begin(), filePath.end()));
 			}
 			ImGuiFileDialog::Instance()->Close();
 		}
@@ -104,83 +60,13 @@ void PlaneMeshGeneratorComponent::RenderGUI()
 		}
 		break;
 	}
-
-	// Heightmap controls
-	if (HeightmapSize != 0)
-		ImGui::Checkbox("Use Heightmap", &UseHeightmap);
-	else
-		UseHeightmap = false;
-
-	if (UseHeightmap)
-	{
-		ImGui::Checkbox("Static", &StaticHeightmap);
-		ImGui::DragFloat("Heightmap Scale", &HeightmapVerticalScale, 0.01f, 0.01f, 500.0f);
-	}
-
-	// Plane Size
-	ImGui::DragInt2("Plane Size", &PlaneSize[0], 1, 1, UseHeightmap ? HeightmapSize : INT16_MAX);
-
-	// Plane generation
-	if (ImGui::Button("Generate Plane"))
-	{
-		GeneratePlane(PlaneSize[0], PlaneSize[1], UseHeightmap, HeightmapVerticalScale);
-	}
-}
-
-void PlaneMeshGeneratorComponent::GeneratePlane(int width, int height, bool useHeightmap, float heightMapScale)
-{
-	const auto meshRenderer = Parent->GetComponent<MeshRendererComponent>();
-	if (!meshRenderer)
-		return;
-
-	++width;
-	++height;
-
-	std::vector<Vertex> newVerts;
-	std::vector<UINT> newIndices;
-	for (unsigned int y = 0; y < height; ++y)
-	{
-		for (unsigned int x = 0; x < width; ++x)
-		{
-			const float normX = static_cast<float>(x) / width;
-			const float normY = static_cast<float>(y) / height;
-
-			float heightMapSample = 0.0f;
-			if (useHeightmap)
-				heightMapSample = static_cast<float>(SampleHeightmap(normX, normY)) / 255.0f;
-
-			// Generate vertices
-			Vertex vert = {
-				DirectX::SimpleMath::Vector3(x, StaticHeightmap ? heightMapSample * HeightmapVerticalScale : 0, y),
-				CalculateNormalAt(normX, normY),
-				DirectX::SimpleMath::Vector2(normX, normY)
-			};
-			newVerts.push_back(vert);
-
-			// Generate indices
-			if (x == width - 1 || y == height - 1)
-				continue;
-			//Triangle 1
-			newIndices.push_back(y * width + x);
-			newIndices.push_back((y + 1) * width + x);
-			newIndices.push_back(y * width + (x + 1));
-
-			//Triangle 2
-			newIndices.push_back(y * width + (x + 1));
-			newIndices.push_back((y + 1) * width + x);
-			newIndices.push_back((y + 1) * width + (x + 1));
-		}
-	}
-
-	Mesh* mesh = meshRenderer->GetMesh();
-	mesh->Initialise(newVerts, newIndices);
 }
 
 /***********************************************
 MARKING SCHEME: Terrain construction
 DESCRIPTION:	Loads heightmap from .RAW file, applied in domain shader, rendered in MeshRendererComponent.cpp
 ***********************************************/
-void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
+void HeightmapGeneratorComponent::LoadHeightmapFromFile(const std::wstring& path)
 {
 	if (std::ifstream inFile(path.c_str(), std::ios_base::binary); inFile)
 	{
@@ -199,7 +85,7 @@ void PlaneMeshGeneratorComponent::LoadHeightmap(const std::wstring& path)
 MARKING SCHEME: Procedural terrain generation
 DESCRIPTION:	Generates heightmap using Fault Formation, Diamond Square, and Perlin Noise techniques.
 ***********************************************/
-void PlaneMeshGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int width, unsigned int height, unsigned int iterations)
+void HeightmapGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int width, unsigned int height, unsigned int iterations)
 {
 	std::vector<float> newHeightmap(width * height);
 
@@ -234,7 +120,7 @@ void PlaneMeshGeneratorComponent::GenerateFaultFormationHeightmap(unsigned int w
 	CreateSrvFromHeightmapData();
 }
 
-void PlaneMeshGeneratorComponent::GenerateDiamondSquareHeightmap(unsigned int width, unsigned int height, unsigned int featureSize)
+void HeightmapGeneratorComponent::GenerateDiamondSquareHeightmap(unsigned int width, unsigned int height, unsigned int featureSize)
 {
 	// Reference: http://bluh.org/code-the-diamond-square-algorithm/
 
@@ -293,7 +179,7 @@ void PlaneMeshGeneratorComponent::GenerateDiamondSquareHeightmap(unsigned int wi
 	CreateSrvFromHeightmapData();
 }
 
-void PlaneMeshGeneratorComponent::SquareStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration)
+void HeightmapGeneratorComponent::SquareStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration)
 {
 	int count = 0;
 	float avg = 0.0f;
@@ -325,7 +211,7 @@ void PlaneMeshGeneratorComponent::SquareStage(std::vector<float>& hm, int x, int
 	hm[y * size + x] = avg;
 }
 
-void PlaneMeshGeneratorComponent::DiamondStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration)
+void HeightmapGeneratorComponent::DiamondStage(std::vector<float>& hm, int x, int y, int reach, int size, float iteration)
 {
 	int count = 0;
 	float avg = 0.0f;
@@ -357,7 +243,7 @@ void PlaneMeshGeneratorComponent::DiamondStage(std::vector<float>& hm, int x, in
 	hm[y * size + x] = avg;
 }
 
-void PlaneMeshGeneratorComponent::GeneratePerlinHeightmap(unsigned width, unsigned height, unsigned iterations)
+void HeightmapGeneratorComponent::GeneratePerlinHeightmap(unsigned width, unsigned height, unsigned iterations)
 {
 	std::vector<float> newHeightmap(width * height);
 
@@ -388,7 +274,7 @@ void PlaneMeshGeneratorComponent::GeneratePerlinHeightmap(unsigned width, unsign
 	CreateSrvFromHeightmapData();
 }
 
-void PlaneMeshGeneratorComponent::CreateSrvFromHeightmapData()
+void HeightmapGeneratorComponent::CreateSrvFromHeightmapData()
 {
 	if (Heightmap.size() == 0)
 		return;
@@ -419,7 +305,7 @@ void PlaneMeshGeneratorComponent::CreateSrvFromHeightmapData()
 	                                                   HeightmapSRV.ReleaseAndGetAddressOf()));
 }
 
-unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(int x, int y) const
+unsigned char HeightmapGeneratorComponent::SampleHeightmap(int x, int y) const
 {
 	if (HeightmapSize == 0)
 		return 0;
@@ -435,7 +321,7 @@ unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(int x, int y) const
 	return Heightmap[index];
 }
 
-unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(float normx, float normy) const
+unsigned char HeightmapGeneratorComponent::SampleHeightmap(float normx, float normy) const
 {
 	const float x = std::clamp(normx, 0.0f, 1.0f);
 	const float y = std::clamp(normy, 0.0f, 1.0f);
@@ -444,7 +330,7 @@ unsigned char PlaneMeshGeneratorComponent::SampleHeightmap(float normx, float no
 	                       static_cast<int>(y * HeightmapSize));
 }
 
-unsigned char PlaneMeshGeneratorComponent::WrapSampleHeightmap(int x, int y) const
+unsigned char HeightmapGeneratorComponent::WrapSampleHeightmap(int x, int y) const
 {
 	if (HeightmapSize == 0)
 		return 0;
@@ -466,13 +352,13 @@ unsigned char PlaneMeshGeneratorComponent::WrapSampleHeightmap(int x, int y) con
 	return Heightmap[index];
 }
 
-unsigned char PlaneMeshGeneratorComponent::WrapSampleHeightmap(float normx, float normy) const
+unsigned char HeightmapGeneratorComponent::WrapSampleHeightmap(float normx, float normy) const
 {
 	return WrapSampleHeightmap(static_cast<int>(normx * HeightmapSize),
 	                           static_cast<int>(normy * HeightmapSize));
 }
 
-DirectX::SimpleMath::Vector3 PlaneMeshGeneratorComponent::CalculateNormalAt(int x, int y) const
+DirectX::SimpleMath::Vector3 HeightmapGeneratorComponent::CalculateNormalAt(int x, int y) const
 {
 	if (!HeightmapSize)
 		return DirectX::SimpleMath::Vector3::Up;
@@ -486,7 +372,7 @@ DirectX::SimpleMath::Vector3 PlaneMeshGeneratorComponent::CalculateNormalAt(int 
 	return normal;
 }
 
-DirectX::SimpleMath::Vector3 PlaneMeshGeneratorComponent::CalculateNormalAt(float normx, float normy) const
+DirectX::SimpleMath::Vector3 HeightmapGeneratorComponent::CalculateNormalAt(float normx, float normy) const
 {
 	const float x = std::clamp(normx, 0.0f, 1.0f);
 	const float y = std::clamp(normy, 0.0f, 1.0f);
