@@ -49,7 +49,7 @@ float4 main(PS_INPUT Input) : SV_TARGET
     texSamples[8] = tx8.Sample(Sampler, tc);
     texSamples[9] = tx9.Sample(Sampler, tc);
 
-    const float normHeight = Input.WorldPos.y / HeightmapScale;
+    const float normHeight = max(0, Input.WorldPos.y) / HeightmapScale;
     float individualTexHeight = 1.0f / NumTextures;
     const int texIndex = floor(normHeight / individualTexHeight);
     const float individualTexNorm = fmod(normHeight, individualTexHeight) / individualTexHeight;

@@ -47,7 +47,7 @@
     <ClInclude Include="Source\Utility\PerlinNoise.h" />
     <ClInclude Include="Source\Game\Components\TerrainWalkComponent.h" />
     <ClInclude Include="Source\Game\Components\MaterialComponent.h" />
-    <ClInclude Include="Source\Game\Components\VoxelTerrainGeneratorComponent.h" />
+    <ClInclude Include="Source\Game\Components\MarchingCubesMeshGeneratorComponent.h" />
     <ClInclude Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.h" />
   </ItemGroup>
   <ItemGroup>
@@ -80,7 +80,7 @@
     <ClCompile Include="Source\Game\Components\MouseLookComponent.cpp" />
     <ClCompile Include="Source\Game\Components\TerrainWalkComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MaterialComponent.cpp" />
-    <ClCompile Include="Source\Game\Components\VoxelTerrainGeneratorComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\MarchingCubesMeshGeneratorComponent.cpp" />
     <ClCompile Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
