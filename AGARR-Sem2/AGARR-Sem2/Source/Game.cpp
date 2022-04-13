@@ -10,6 +10,7 @@
 #include "Game/Components/TerrainWalkComponent.h"
 #include "Game/Components/MaterialComponent.h"
 #include "Game/Components/PlaneTerrainMeshGeneratorComponent.h"
+#include "Game/Components/VoxelTerrainGeneratorComponent.h"
 #include "Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
@@ -80,6 +81,7 @@ void Game::Initialize(HWND window, int width, int height)
 	cubeMat->AddTexture(L"Resources/snow.dds");
 	const auto hmGen = cube->AddComponent(new HeightmapGeneratorComponent());
 	const auto planeGen = cube->AddComponent(new PlaneTerrainMeshGeneratorComponent());
+	cube->AddComponent(new VoxelTerrainGeneratorComponent());
 	cube->AddComponent(new MeshRendererComponent());
 
 	terrainWalk->SetHeightmapGenerator(hmGen);
