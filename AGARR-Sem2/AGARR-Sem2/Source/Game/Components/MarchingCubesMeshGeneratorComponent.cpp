@@ -5,6 +5,7 @@
 #include "MeshRendererComponent.h"
 #include "TransformComponent.h"
 #include "Rendering/Mesh.h"
+#include "Utility/PerlinNoise.h"
 
 MarchingCubesMeshGeneratorComponent::MarchingCubesMeshGeneratorComponent()
 {
@@ -40,11 +41,17 @@ void MarchingCubesMeshGeneratorComponent::Render()
 void MarchingCubesMeshGeneratorComponent::RenderGUI()
 {
 	ImGui::DragFloat("Mesh Resolution", &Resolution, 0.5f, 16.0f, 2048.0f);
+	ImGui::DragFloat("Cave Frequency", &CaveFrequency, 0.1f, 0.1f, 100.0f);
+	ImGui::SliderFloat("Cave Threshold", &CaveThreshold, 0.0f, 1.0f);
+
+	ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 	if (ImGui::SliderFloat("Heightmap Scale", &NormHeightmapVerticalScale, 0.0f, 1.0f))
 		NormHeightmapPosition = 1.0f - NormHeightmapVerticalScale;
 	if (ImGui::SliderFloat("Heightmap Position", &NormHeightmapPosition, 0.0f, 1.0f))
 		NormHeightmapVerticalScale = 1.0f - NormHeightmapPosition;
+
+	ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 	if (ImGui::Button("Generate Voxel Mesh"))
 		GenerateMarchingCubesMesh();
@@ -52,16 +59,23 @@ void MarchingCubesMeshGeneratorComponent::RenderGUI()
 
 bool MarchingCubesMeshGeneratorComponent::SampleTerrain3D(const DirectX::SimpleMath::Vector3& pos) const
 {
+#define SOLID true
+#define AIR false
+
 	const auto heightmapGenerator = Parent->GetComponent<HeightmapGeneratorComponent>();
 	if (!heightmapGenerator)
-		return false;
+		return AIR;
+
+	const auto perlin = PerlinNoise::noise(pos.x * CaveFrequency, pos.y * CaveFrequency, pos.z * CaveFrequency);
+	if (perlin < CaveThreshold)
+		return AIR;
 
 	const float heightmap = heightmapGenerator->SampleHeightmap(pos.x, pos.z) / 255.0f;
 	const float terrainHeight = NormHeightmapPosition + heightmap * NormHeightmapVerticalScale;
 	if (pos.y < terrainHeight)
-		return true;
+		return SOLID;
 
-	return false;
+	return AIR;
 }
 
 DirectX::SimpleMath::Vector3 MarchingCubesMeshGeneratorComponent::Interpolate(float isolevel, DirectX::SimpleMath::Vector3 p1, DirectX::SimpleMath::Vector3 p2, bool valp1, bool valp2) const
@@ -162,12 +176,26 @@ void MarchingCubesMeshGeneratorComponent::GenerateMarchingCubesMesh()
 				for (int i = 0; triTable[cubeindex][i] != -1; i += 3)
 				{
 					const int vs = vertices.size();
-					vertices.push_back({ vertlist[triTable[cubeindex][i]], DirectX::SimpleMath::Vector3::Up, DirectX::SimpleMath::Vector2::Zero });
-					vertices.push_back({ vertlist[triTable[cubeindex][i + 1]], DirectX::SimpleMath::Vector3::Up, DirectX::SimpleMath::Vector2::Zero });
-					vertices.push_back({ vertlist[triTable[cubeindex][i + 2]], DirectX::SimpleMath::Vector3::Up, DirectX::SimpleMath::Vector2::Zero });
-					indices.push_back(vs + 2);
+
+					// Calculate normal
+					const auto p1 = vertlist[triTable[cubeindex][i]];
+					const auto p2 = vertlist[triTable[cubeindex][i + 1]];
+					const auto p3 = vertlist[triTable[cubeindex][i + 2]];
+
+					const auto v1 = p2 - p1;
+					const auto v2 = p3 - p1;
+					DirectX::SimpleMath::Vector3 norm = v1.Cross(v2);
+					norm.Normalize();
+
+					// Add vertices
+					vertices.push_back({ vertlist[triTable[cubeindex][i]], norm, DirectX::SimpleMath::Vector2::Zero });
+					vertices.push_back({ vertlist[triTable[cubeindex][i + 1]], norm, DirectX::SimpleMath::Vector2::Zero });
+					vertices.push_back({ vertlist[triTable[cubeindex][i + 2]], norm, DirectX::SimpleMath::Vector2::Zero });
+
+					// Add indices
 					indices.push_back(vs);
 					indices.push_back(vs + 1);
+					indices.push_back(vs + 2);
 				}
 			}
 		}

@@ -28,9 +28,11 @@ private:
 	[[nodiscard]] DirectX::SimpleMath::Vector3 Interpolate(float isolevel, DirectX::SimpleMath::Vector3 p1, DirectX::SimpleMath::Vector3 p2, bool valp1, bool valp2) const;
 
 	float Resolution{ 128.0f };
+	float CaveFrequency{ 5.0f };
+	float CaveThreshold{ 0.35f };
 
-	float NormHeightmapVerticalScale{ 0.3f };
-	float NormHeightmapPosition{ 0.7f };
+	float NormHeightmapVerticalScale{ 0.7f };
+	float NormHeightmapPosition{ 0.3f };
 
 	TerrainConstantBuffer TerrainCBufferData;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> TerrainCBuffer;
