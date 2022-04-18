@@ -195,6 +195,7 @@
     <ClInclude Include="External\imgui\imstb_truetype.h" />
     <ClInclude Include="External\imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="External\imgui\misc\single_file\imgui_single_file.h" />
+    <ClInclude Include="Source\Game\Components\RiggedMeshRendererComponent.h" />
     <ClInclude Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.h" />
     <ClInclude Include="Source\Game\Components\MaterialComponent.h" />
     <ClInclude Include="Source\Game\Components\MouseLookComponent.h" />
@@ -277,6 +278,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Source\Game\Components\RiggedMeshRendererComponent.cpp" />
     <ClCompile Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MaterialComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MouseLookComponent.cpp" />

@@ -11,6 +11,7 @@
 #include "Game/Components/MaterialComponent.h"
 #include "Game/Components/PlaneTerrainMeshGeneratorComponent.h"
 #include "Game/Components/MarchingCubesMeshGeneratorComponent.h"
+#include "Game/Components/RiggedMeshRendererComponent.h"
 #include "Rendering/RenderPassGeometry.h"
 
 extern void ExitGame() noexcept;
@@ -62,7 +63,7 @@ void Game::Initialize(HWND window, int width, int height)
 	for (const auto& rp : RenderPipeline)
 		rp->Initialise();
 
-	// Create GameObjects
+	// Create GameObjects (Temporary for testing)
 	GameObjects.push_back(new GameObject());
 	const auto cam = GameObjects[0];
 	cam->AddComponent(new CameraComponent());
@@ -94,6 +95,10 @@ void Game::Initialize(HWND window, int width, int height)
 	water->AddComponent(new HeightmapGeneratorComponent());
 	water->AddComponent(new PlaneTerrainMeshGeneratorComponent());
 	water->AddComponent(new MeshRendererComponent());
+
+	GameObjects.push_back(new GameObject());
+	const auto rigged = GameObjects[3];
+	rigged->AddComponent(new RiggedMeshRendererComponent());
 
 	// Vsync
 	m_timer.SetFixedTimeStep(true);

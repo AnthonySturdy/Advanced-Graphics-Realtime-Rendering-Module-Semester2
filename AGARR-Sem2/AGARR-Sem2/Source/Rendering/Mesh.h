@@ -5,6 +5,10 @@ struct Vertex
 	DirectX::SimpleMath::Vector3 Pos{ DirectX::SimpleMath::Vector3::Zero };
 	DirectX::SimpleMath::Vector3 Normal{ DirectX::SimpleMath::Vector3::Up };
 	DirectX::SimpleMath::Vector2 TexCoord{ DirectX::SimpleMath::Vector2::Zero };
+
+	// Not sent to shader
+	int StartWeight{ 0 };
+	int WeightCount{ 0 };
 };
 
 class Mesh

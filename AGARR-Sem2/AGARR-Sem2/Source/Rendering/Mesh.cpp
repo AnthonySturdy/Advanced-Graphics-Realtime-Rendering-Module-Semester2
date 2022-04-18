@@ -3,8 +3,6 @@
 
 #include "WaveFrontReader.h"
 
-using namespace DirectX::SimpleMath;
-
 Mesh::Mesh()
 {
 	Initialise(DefaultCubeObjPath);

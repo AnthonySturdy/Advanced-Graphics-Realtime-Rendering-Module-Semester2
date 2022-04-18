@@ -49,6 +49,7 @@
     <ClInclude Include="Source\Game\Components\MaterialComponent.h" />
     <ClInclude Include="Source\Game\Components\MarchingCubesMeshGeneratorComponent.h" />
     <ClInclude Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.h" />
+    <ClInclude Include="Source\Game\Components\RiggedMeshRendererComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\pch.cpp" />
@@ -82,6 +83,7 @@
     <ClCompile Include="Source\Game\Components\MaterialComponent.cpp" />
     <ClCompile Include="Source\Game\Components\MarchingCubesMeshGeneratorComponent.cpp" />
     <ClCompile Include="Source\Game\Components\PlaneTerrainMeshGeneratorComponent.cpp" />
+    <ClCompile Include="Source\Game\Components\RiggedMeshRendererComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
