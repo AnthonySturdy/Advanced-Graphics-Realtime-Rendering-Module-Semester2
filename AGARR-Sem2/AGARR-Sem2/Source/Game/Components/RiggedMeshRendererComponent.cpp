@@ -95,10 +95,11 @@ void RiggedMeshRendererComponent::CreateConstantBuffer()
 
 void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 {
-	std::wifstream fileIn(path);
+	Subsets.clear();
+	Joints.clear();
 
 	std::wstring checkString;
-
+	std::wifstream fileIn(path);
 	if (fileIn.is_open())
 	{
 		while (fileIn)
@@ -281,12 +282,12 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 				for (int i = 0; i < numTris; ++i)
 				{
 					// Calculate normal
-					auto& p1 = vertices[indices[numTris]];
-					auto& p2 = vertices[indices[numTris + 1]];
-					auto& p3 = vertices[indices[numTris + 2]];
+					auto& p1 = vertices[indices[i]];
+					auto& p2 = vertices[indices[i + 1]];
+					auto& p3 = vertices[indices[i + 2]];
 
-					const auto v1 = p2.Pos - p1.Pos;
-					const auto v2 = p3.Pos - p1.Pos;
+					const auto v1 = p3.Pos - p1.Pos;
+					const auto v2 = p2.Pos - p1.Pos;
 					DirectX::SimpleMath::Vector3 norm = v1.Cross(v2);
 					norm.Normalize();
 
