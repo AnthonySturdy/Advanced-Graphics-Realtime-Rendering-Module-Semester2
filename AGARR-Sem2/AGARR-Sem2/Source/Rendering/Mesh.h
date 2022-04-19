@@ -24,9 +24,14 @@ public:
 	void Initialise(const std::wstring& modelPath);
 	void Initialise(const std::vector<Vertex>& newVerts, const std::vector<UINT>& newIndices);
 
+	void RefreshVertexBuffer();
+
+	[[nodiscard]] std::vector<Vertex>& GetVertices() { return Vertices; }
+	[[nodiscard]] const std::vector<UINT>& GetIndices() const { return Indices; }
+	[[nodiscard]] int GetNumIndices() const { return Indices.size(); }
+
 	[[nodiscard]] ID3D11Buffer* GetVertexBuffer() const { return VertexBuffer.Get(); }
 	[[nodiscard]] ID3D11Buffer* GetIndexBuffer() const { return IndexBuffer.Get(); }
-	[[nodiscard]] int GetNumIndices() const { return Indices.size(); }
 
 private:
 	void CreateMeshBuffers();

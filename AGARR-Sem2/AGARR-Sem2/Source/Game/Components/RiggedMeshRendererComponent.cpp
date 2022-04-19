@@ -10,6 +10,91 @@ RiggedMeshRendererComponent::RiggedMeshRendererComponent()
 	CreateConstantBuffer();
 }
 
+void RiggedMeshRendererComponent::Update(float deltaTime)
+{
+	if (Animations.size() == 0)
+		return;
+
+	int animation = 0;
+
+	ModelAnimation& anim = Animations[animation];
+
+	Animations[animation].CurrAnimTime += deltaTime;
+	if (anim.CurrAnimTime > anim.TotalAnimTime)
+		anim.CurrAnimTime = 0.0f;
+
+	const float currentFrame = anim.CurrAnimTime * anim.FrameRate;
+	const int frame0 = floor(currentFrame);
+	int frame1 = frame0 + 1;
+
+	if (frame0 == anim.NumFrames - 1)
+		frame1 = 0;
+
+	const float interpolation = currentFrame - frame0;
+	std::vector<Joint> interpolatedSkeleton{};
+
+	for (int i = 0; i < anim.NumJoints; ++i)
+	{
+		Joint j;
+		const Joint joint0 = anim.FrameSkeleton[frame0][i];
+		const Joint joint1 = anim.FrameSkeleton[frame1][i];
+
+		j.ParentID = joint0.ParentID;
+
+		DirectX::SimpleMath::Quaternion joint0Orient = joint0.Orientation;
+		DirectX::SimpleMath::Quaternion joint1Orient = joint1.Orientation;
+
+		j.Position = DirectX::SimpleMath::Vector3::Lerp(joint0.Position, joint1.Position, interpolation);
+		j.Orientation = DirectX::SimpleMath::Quaternion::Slerp(joint0Orient, joint1Orient, interpolation);
+
+		interpolatedSkeleton.push_back(j);
+	}
+
+	for (int k = 0; k < NumSubsets; ++k)
+	{
+		for (int i = 0; i < Subsets[k].MeshData->GetVertices().size(); ++i)
+		{
+			Vertex v = Subsets[k].MeshData->GetVertices()[i];
+
+			v.Pos = DirectX::SimpleMath::Vector3::Zero;
+			v.Normal = DirectX::SimpleMath::Vector3::Zero;
+
+			// Sum up joints and weights information to get vertex position and normal
+			for (int j = 0; j < v.WeightCount; ++j)
+			{
+				Weight weight = Subsets[k].Weights[v.StartWeight + j];
+				Joint joint = interpolatedSkeleton[weight.JointID];
+
+				DirectX::SimpleMath::Quaternion jointOrientation = joint.Orientation;
+				DirectX::SimpleMath::Vector3 weightPos = weight.Position;
+				DirectX::SimpleMath::Quaternion jointOrientationConjugate;
+				jointOrientation.Conjugate(jointOrientationConjugate);
+
+				DirectX::SimpleMath::Vector3 rotatedPoint = XMQuaternionMultiply(XMQuaternionMultiply(jointOrientation, weightPos), jointOrientationConjugate);
+
+				// Move the verices position from joint space
+				v.Pos += (joint.Position + rotatedPoint) * weight.Bias;
+
+				// Compute normals for this frames skeleton using the weight normals
+				DirectX::SimpleMath::Vector3 weightNormal = weight.Normal;
+
+				// Rotate normal
+				rotatedPoint = XMQuaternionMultiply(XMQuaternionMultiply(jointOrientation, weightNormal), jointOrientationConjugate);
+
+				// Add to vertices normal
+				v.Normal -= rotatedPoint * weight.Bias;
+			}
+
+			Subsets[k].MeshData->GetVertices()[i].Pos = v.Pos;
+			v.Normal.Normalize();
+			// TODO: Fix normal rotation
+			//Subsets[k].MeshData->GetVertices()[i].Normal = v.Normal;
+		}
+
+		Subsets[k].MeshData->RefreshVertexBuffer();
+	}
+}
+
 void RiggedMeshRendererComponent::Render()
 {
 	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
@@ -62,9 +147,9 @@ void RiggedMeshRendererComponent::RenderGUI()
 	ImGui::InputText("##", path, 512, ImGuiInputTextFlags_ReadOnly);
 	ImGui::SameLine();
 	if (ImGui::Button("Choose Model"))
-		ImGuiFileDialog::Instance()->OpenDialog("SelectObjModel", "Choose File", ".md5mesh", ".");
+		ImGuiFileDialog::Instance()->OpenDialog("SelectMd5Model", "Choose File", ".md5mesh", ".");
 
-	if (ImGuiFileDialog::Instance()->Display("SelectObjModel"))
+	if (ImGuiFileDialog::Instance()->Display("SelectMd5Model"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
 		{
@@ -76,6 +161,28 @@ void RiggedMeshRendererComponent::RenderGUI()
 				path[i] = filePath[i];
 
 			LoadMD5Model(std::wstring(filePath.begin(), filePath.end()));
+		}
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	static char* path1 = new char[512]{};
+	ImGui::InputText("##", path1, 512, ImGuiInputTextFlags_ReadOnly);
+	ImGui::SameLine();
+	if (ImGui::Button("Choose Anim"))
+		ImGuiFileDialog::Instance()->OpenDialog("SelectMd5Anim", "Choose File", ".md5anim", ".");
+
+	if (ImGuiFileDialog::Instance()->Display("SelectMd5Anim"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			const std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+
+			delete[] path1;
+			path1 = new char[512]{};
+			for (int i = 0; i < filePath.size(); ++i)
+				path1[i] = filePath[i];
+
+			LoadMD5Anim(std::wstring(filePath.begin(), filePath.end()));
 		}
 		ImGuiFileDialog::Instance()->Close();
 	}
@@ -97,30 +204,32 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 {
 	Subsets.clear();
 	Joints.clear();
+	Animations.clear();
 
-	std::wstring checkString;
-	std::wifstream fileIn(path);
-	if (fileIn.is_open())
+	std::wifstream inFile(path);
+	if (inFile.is_open())
 	{
-		while (fileIn)
+		std::wstring checkString;
+
+		while (inFile)
 		{
-			fileIn >> checkString;
+			inFile >> checkString;
 
 			// Load header information
 			if (checkString == L"MD5Version")
 			{
-				fileIn >> checkString;
+				inFile >> checkString;
 				if (checkString != L"10") throw std::invalid_argument("Only MD5 Version 10 is supported.");
 			}
 			else if (checkString == L"commandline")
-				std::getline(fileIn, checkString); // Skip rest of line
+				std::getline(inFile, checkString); // Skip rest of line
 			else if (checkString == L"numJoints")
-				fileIn >> NumJoints;
+				inFile >> NumJoints;
 			else if (checkString == L"numMeshes")
-				fileIn >> NumSubsets;
+				inFile >> NumSubsets;
 			else if (checkString == L"joints")
 			{
-				fileIn >> checkString; // Skip '{'
+				inFile >> checkString; // Skip '{'
 
 				// Load joints
 				for (int i = 0; i < NumJoints; ++i)
@@ -128,27 +237,27 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 					Joint joint;
 
 					// Load joint name
-					fileIn >> joint.Name;
+					inFile >> joint.Name;
 					joint.Name.erase(0, 1);
 					while (!joint.Name.ends_with(L"\""))
 					{
-						fileIn >> checkString;
+						inFile >> checkString;
 						joint.Name += L" " + checkString;
 					}
 					joint.Name.erase(joint.Name.end() - 1);
 
 					// Load joint parent id
-					fileIn >> joint.ParentID;
+					inFile >> joint.ParentID;
 
-					fileIn >> checkString; // Skip '('
+					inFile >> checkString; // Skip '('
 
 					// Load joint position
-					fileIn >> joint.Position.x >> joint.Position.z >> joint.Position.y;
+					inFile >> joint.Position.x >> joint.Position.z >> joint.Position.y;
 
-					fileIn >> checkString >> checkString; // Skip ')' and '('
+					inFile >> checkString >> checkString; // Skip ')' and '('
 
 					// Load joint orientation and calculate w axis of quaternion
-					fileIn >> joint.Orientation.x >> joint.Orientation.z >> joint.Orientation.y;
+					inFile >> joint.Orientation.x >> joint.Orientation.z >> joint.Orientation.y;
 					const float t = 1.0f - (joint.Orientation.x * joint.Orientation.x)
 						- (joint.Orientation.y * joint.Orientation.y)
 						- (joint.Orientation.z * joint.Orientation.z);
@@ -157,12 +266,12 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 					else
 						joint.Orientation.w = -sqrtf(t);
 
-					std::getline(fileIn, checkString); // Skip rest of line
+					std::getline(inFile, checkString); // Skip rest of line
 
 					Joints.push_back(joint);
 				}
 
-				fileIn >> checkString; // Skip '}'
+				inFile >> checkString; // Skip '}'
 			}
 			else if (checkString == L"mesh")
 			{
@@ -172,84 +281,84 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 				std::vector<Vertex> vertices;
 				std::vector<UINT> indices;
 
-				fileIn >> checkString; // Skip '{'
+				inFile >> checkString; // Skip '{'
 
-				fileIn >> checkString;
+				inFile >> checkString;
 				while (checkString != L"}") // Loop until end of mesh
 				{
 					if (checkString == L"shader")
-						std::getline(fileIn, checkString); // Todo: Load texture with material component
+						std::getline(inFile, checkString); // Todo: Load texture with material component
 					else if (checkString == L"numverts")
 					{
-						fileIn >> numVerts;
-						std::getline(fileIn, checkString); // Skip rest of line
+						inFile >> numVerts;
+						std::getline(inFile, checkString); // Skip rest of line
 
 						for (int i = 0; i < numVerts; ++i)
 						{
 							Vertex v;
-							fileIn >> checkString >> checkString >> checkString; // Skip 'vert <counter> ('
+							inFile >> checkString >> checkString >> checkString; // Skip 'vert <counter> ('
 
-							fileIn >> v.TexCoord.x >> v.TexCoord.y;
+							inFile >> v.TexCoord.x >> v.TexCoord.y;
 
-							fileIn >> checkString; // Skip ')'
+							inFile >> checkString; // Skip ')'
 
-							fileIn >> v.StartWeight;
-							fileIn >> v.WeightCount;
+							inFile >> v.StartWeight;
+							inFile >> v.WeightCount;
 
-							std::getline(fileIn, checkString); // Skip rest of line
+							std::getline(inFile, checkString); // Skip rest of line
 
 							vertices.push_back(v);
 						}
 					}
 					else if (checkString == L"numtris")
 					{
-						fileIn >> numTris;
+						inFile >> numTris;
 
 						for (int i = 0; i < numTris; ++i)
 						{
 							int idx;
-							fileIn >> checkString >> checkString; // Skip 'tri <counter>'
+							inFile >> checkString >> checkString; // Skip 'tri <counter>'
 
 							// Load indices
-							fileIn >> idx;
+							inFile >> idx;
 							indices.push_back(idx);
 
-							fileIn >> idx;
+							inFile >> idx;
 							indices.push_back(idx);
 
-							fileIn >> idx;
+							inFile >> idx;
 							indices.push_back(idx);
 
-							std::getline(fileIn, checkString); // Skip rest of line
+							std::getline(inFile, checkString); // Skip rest of line
 						}
 					}
 					else if (checkString == L"numweights")
 					{
-						fileIn >> numWeights;
-						std::getline(fileIn, checkString); // Skip rest of line
+						inFile >> numWeights;
+						std::getline(inFile, checkString); // Skip rest of line
 
 						for (int i = 0; i < numWeights; ++i)
 						{
 							Weight weight;
 
-							fileIn >> checkString >> checkString; // Skip 'weight <counter>'
+							inFile >> checkString >> checkString; // Skip 'weight <counter>'
 
-							fileIn >> weight.JointID;
-							fileIn >> weight.Bias;
+							inFile >> weight.JointID;
+							inFile >> weight.Bias;
 
-							fileIn >> checkString; // Skip '('
+							inFile >> checkString; // Skip '('
 
-							fileIn >> weight.Position.x >> weight.Position.z >> weight.Position.y;
+							inFile >> weight.Position.x >> weight.Position.z >> weight.Position.y;
 
-							std::getline(fileIn, checkString); // Skip rest of line
+							std::getline(inFile, checkString); // Skip rest of line
 
 							subset.Weights.push_back(weight);
 						}
 					}
 					else
-						std::getline(fileIn, checkString); // Skip unsupported lines
+						std::getline(inFile, checkString); // Skip unsupported lines
 
-					fileIn >> checkString;
+					inFile >> checkString;
 				}
 
 				// Calculate vertex position after all data loaded
@@ -279,21 +388,50 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 				}
 
 				// Calculate surface normals
+				std::vector<DirectX::SimpleMath::Vector3> tempNormals;
+
+				DirectX::SimpleMath::Vector3 unnormalized{ DirectX::SimpleMath::Vector3::Zero };
+				DirectX::SimpleMath::Vector3 edge1{ DirectX::SimpleMath::Vector3::Zero };
+				DirectX::SimpleMath::Vector3 edge2{ DirectX::SimpleMath::Vector3::Zero };
+
+				//Compute face normals
 				for (int i = 0; i < numTris; ++i)
 				{
-					// Calculate normal
-					auto& p1 = vertices[indices[i]];
-					auto& p2 = vertices[indices[i + 1]];
-					auto& p3 = vertices[indices[i + 2]];
+					//Get the vector describing edge of triangle (edge 0,2)
+					edge1 = vertices[indices[(i * 3)]].Pos - vertices[indices[(i * 3) + 2]].Pos; //Create our first edge
 
-					const auto v1 = p3.Pos - p1.Pos;
-					const auto v2 = p2.Pos - p1.Pos;
-					DirectX::SimpleMath::Vector3 norm = v1.Cross(v2);
-					norm.Normalize();
+					//Get the vector describing edge of triangle (edge 2,1)
+					edge2 = vertices[indices[(i * 3) + 2]].Pos - vertices[indices[(i * 3) + 1]].Pos; //Create our second edge
 
-					p1.Normal = norm;
-					p2.Normal = norm;
-					p3.Normal = norm;
+					unnormalized = edge1.Cross(edge2);
+
+					tempNormals.push_back(unnormalized);
+				}
+
+				DirectX::SimpleMath::Vector3 normalSum{ 0.0f, 0.0f, 0.0f };
+				int facesUsing = 0;
+				for (int i = 0; i < vertices.size(); ++i)
+				{
+					//Check which triangles use this vertex
+					for (int j = 0; j < numTris; ++j)
+					{
+						if (indices[j * 3] == i ||
+							indices[(j * 3) + 1] == i ||
+							indices[(j * 3) + 2] == i)
+						{
+							normalSum += tempNormals[j];
+
+							facesUsing++;
+						}
+					}
+
+					normalSum = normalSum / facesUsing;
+					normalSum.Normalize();
+
+					vertices[i].Normal = -normalSum;
+
+					normalSum = DirectX::SimpleMath::Vector3::Zero;
+					facesUsing = 0;
 				}
 
 				// Initialise sub-mesh
@@ -305,6 +443,213 @@ void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 	}
 	else
 	{
-		throw std::invalid_argument("Unable to load .md5mesh file!");
+		throw std::invalid_argument("Unable to open .md5mesh file!");
+	}
+}
+
+void RiggedMeshRendererComponent::LoadMD5Anim(const std::wstring& path)
+{
+	std::wifstream inFile(path);
+	if (inFile.is_open())
+	{
+		ModelAnimation anim;
+
+		std::wstring checkString;
+
+		while (inFile)
+		{
+			inFile >> checkString;
+
+			// Load header information
+			if (checkString == L"MD5Version")
+			{
+				inFile >> checkString;
+				if (checkString != L"10") throw std::invalid_argument("Only MD5 Version 10 is supported.");
+			}
+			else if (checkString == L"commandline")
+				std::getline(inFile, checkString); // Skip rest of line
+			else if (checkString == L"numFrames")
+				inFile >> anim.NumFrames;
+			else if (checkString == L"numJoints")
+				inFile >> anim.NumJoints;
+			else if (checkString == L"frameRate")
+				inFile >> anim.FrameRate;
+			else if (checkString == L"numAnimatedComponents")
+				inFile >> anim.NumAnimatedComponents;
+			else if (checkString == L"hierarchy")
+			{
+				// Load animation joints
+				inFile >> checkString;
+
+				for (int i = 0; i < anim.NumJoints; ++i)
+				{
+					AnimJointInfo joint;
+
+					inFile >> joint.Name;
+					joint.Name.erase(0, 1);
+					while (!joint.Name.ends_with(L"\""))
+					{
+						inFile >> checkString;
+						joint.Name += L" " + checkString;
+					}
+					joint.Name.erase(joint.Name.end() - 1);
+
+					inFile >> joint.ParentID;
+					inFile >> joint.Flags;
+					inFile >> joint.StartIndex;
+
+					// Verify joint exists in mesh
+					bool jointMatchFound = false;
+					for (int j = 0; j < NumJoints; ++j)
+						if (Joints[j].Name == joint.Name &&
+							Joints[j].ParentID == joint.ParentID)
+						{
+							jointMatchFound = true;
+							anim.JointInfo.push_back(joint);
+						}
+					if (!jointMatchFound)
+						throw std::invalid_argument("Anim incompatible with loaded mesh");
+
+					std::getline(inFile, checkString); // Skip rest of line
+				}
+			}
+			else if (checkString == L"bounds")
+			{
+				inFile >> checkString;
+
+				for (int i = 0; i < anim.NumFrames; ++i)
+				{
+					BoundingBox bb;
+
+					inFile >> checkString; // Skip '('
+					inFile >> bb.Min.x >> bb.Min.z >> bb.Min.y;
+					inFile >> checkString >> checkString; // Skip ') ('
+					inFile >> bb.Max.x >> bb.Max.z >> bb.Max.y;
+					inFile >> checkString;
+
+					anim.FrameBounds.push_back(bb);
+				}
+			}
+			else if (checkString == L"baseframe")
+			{
+				inFile >> checkString;
+
+				for (int i = 0; i < anim.NumJoints; ++i)
+				{
+					Joint bfj;
+
+					inFile >> checkString; // Skip '('
+					inFile >> bfj.Position.x >> bfj.Position.z >> bfj.Position.y;
+					inFile >> checkString >> checkString; // Skip ') ('
+					inFile >> bfj.Orientation.x >> bfj.Orientation.z >> bfj.Orientation.y;
+					inFile >> checkString;
+
+					anim.BaseFrameJoints.push_back(bfj);
+				}
+			}
+			else if (checkString == L"frame")
+			{
+				FrameData frame;
+
+				inFile >> frame.FrameID;
+
+				inFile >> checkString; // Skip '{'
+
+				for (int i = 0; i < anim.NumAnimatedComponents; ++i)
+				{
+					float tempData;
+					inFile >> tempData;
+
+					frame.Data.push_back(tempData);
+				}
+
+				anim.Frames.push_back(frame);
+
+				// Build frame skeleton
+				std::vector<Joint> skeleton;
+				for (int i = 0; i < anim.JointInfo.size(); i++)
+				{
+					int k = 0; // Keep track of position in frameData array
+
+					// Start the frames joint with the base frame's joint
+					Joint frameJoint = anim.BaseFrameJoints[i];
+
+					frameJoint.ParentID = anim.JointInfo[i].ParentID;
+
+					if (anim.JointInfo[i].Flags & 1) // pos.x    ( 000001 )
+						frameJoint.Position.x = frame.Data[anim.JointInfo[i].StartIndex + k++];
+
+					if (anim.JointInfo[i].Flags & 2) // pos.y    ( 000010 )
+						frameJoint.Position.z = frame.Data[anim.JointInfo[i].StartIndex + k++];
+
+					if (anim.JointInfo[i].Flags & 4) // pos.z    ( 000100 )
+						frameJoint.Position.y = frame.Data[anim.JointInfo[i].StartIndex + k++];
+
+					if (anim.JointInfo[i].Flags & 8) // orientation.x    ( 001000 )
+						frameJoint.Orientation.x = frame.Data[anim.JointInfo[i].StartIndex + k++];
+
+					if (anim.JointInfo[i].Flags & 16) // orientation.y    ( 010000 )
+						frameJoint.Orientation.z = frame.Data[anim.JointInfo[i].StartIndex + k++];
+
+					if (anim.JointInfo[i].Flags & 32) // orientation.z    ( 100000 )
+						frameJoint.Orientation.y = frame.Data[anim.JointInfo[i].StartIndex + k++];
+
+
+					// Compute the quaternion's w
+					const float t = 1.0f - (frameJoint.Orientation.x * frameJoint.Orientation.x)
+						- (frameJoint.Orientation.y * frameJoint.Orientation.y)
+						- (frameJoint.Orientation.z * frameJoint.Orientation.z);
+					if (t < 0.0f)
+					{
+						frameJoint.Orientation.w = 0.0f;
+					}
+					else
+					{
+						frameJoint.Orientation.w = -sqrtf(t);
+					}
+
+					// Update skeleton joint position based on parent's orientation
+					if (frameJoint.ParentID >= 0)
+					{
+						Joint parentJoint = skeleton[frameJoint.ParentID];
+
+						DirectX::XMVECTOR parentJointOrientation = parentJoint.Orientation;
+						DirectX::XMVECTOR tempJointPos = frameJoint.Position;
+						DirectX::SimpleMath::Quaternion pjoc;
+						parentJoint.Orientation.Conjugate(pjoc);
+						DirectX::XMVECTOR parentOrientationConjugate = pjoc;
+
+						// Calculate current joints position relative to its parents position
+						DirectX::SimpleMath::Vector3 rotatedPos = DirectX::XMQuaternionMultiply(DirectX::XMQuaternionMultiply(parentJointOrientation, tempJointPos), parentOrientationConjugate);
+
+						// Translate the joint to model space by adding the parent joint's pos to it
+						frameJoint.Position = rotatedPos + parentJoint.Position;
+
+						// Currently the joint is oriented in its parent joints space, orient it in model space
+						DirectX::SimpleMath::Quaternion tempJointOrient = frameJoint.Orientation;
+						tempJointOrient = XMQuaternionMultiply(parentJointOrientation, tempJointOrient);
+
+						tempJointOrient.Normalize();
+
+						frameJoint.Orientation = tempJointOrient;
+					}
+
+					skeleton.push_back(frameJoint);
+				}
+
+				anim.FrameSkeleton.push_back(skeleton);
+
+				inFile >> checkString; // Skip '}'
+			}
+		}
+
+		anim.FrameTime = 1.0f / anim.FrameRate;
+		anim.TotalAnimTime = anim.NumFrames * anim.FrameTime;
+
+		Animations.push_back(anim);
+	}
+	else
+	{
+		throw std::invalid_argument("Unable to open .md5mesh file!");
 	}
 }

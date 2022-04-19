@@ -23,6 +23,13 @@ void Mesh::Initialise(const std::vector<Vertex>& newVerts, const std::vector<UIN
 	CreateMeshBuffers();
 }
 
+void Mesh::RefreshVertexBuffer()
+{
+	const auto context = DX::DeviceResources::Instance()->GetD3DDeviceContext();
+
+	context->UpdateSubresource(VertexBuffer.Get(), 0, nullptr, Vertices.data(), 0, 0);
+}
+
 void Mesh::CreateMeshBuffers()
 {
 	const auto device = DX::DeviceResources::Instance()->GetD3DDevice();

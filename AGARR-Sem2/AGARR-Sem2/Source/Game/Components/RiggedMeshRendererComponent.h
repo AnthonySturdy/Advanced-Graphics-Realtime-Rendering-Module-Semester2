@@ -6,6 +6,7 @@
 
 class RiggedMeshRendererComponent : public Component
 {
+	// MD5 Mesh
 	struct Joint
 	{
 		std::wstring Name{};
@@ -20,6 +21,7 @@ class RiggedMeshRendererComponent : public Component
 		int JointID{ -1 };
 		float Bias{ 0.0f };
 		DirectX::SimpleMath::Vector3 Position{ DirectX::SimpleMath::Vector3::Zero };
+		DirectX::SimpleMath::Vector3 Normal{ DirectX::SimpleMath::Vector3::Zero };
 	};
 
 	struct ModelSubset
@@ -28,8 +30,46 @@ class RiggedMeshRendererComponent : public Component
 
 		std::shared_ptr<Mesh> MeshData{ nullptr };
 		std::vector<Weight> Weights{};
+	};
 
-		//std::vector<DirectX::SimpleMath::Vector3> Positions{};
+	// MD5 Animation
+	struct BoundingBox
+	{
+		DirectX::SimpleMath::Vector3 Min{ DirectX::SimpleMath::Vector3::Zero };
+		DirectX::SimpleMath::Vector3 Max{ DirectX::SimpleMath::Vector3::Zero };
+	};
+
+	struct FrameData
+	{
+		int FrameID{ 0 };
+		std::vector<float> Data{};
+	};
+
+	struct AnimJointInfo
+	{
+		std::wstring Name{};
+		int ParentID{ -1 };
+
+		int Flags{ 0 };
+		int StartIndex{ 0 };
+	};
+
+	struct ModelAnimation
+	{
+		int NumFrames{ 0 };
+		int NumJoints{ 0 };
+		int FrameRate{ 0 };
+		int NumAnimatedComponents{ 0 };
+
+		float FrameTime{ 0.0f };
+		float TotalAnimTime{ 0.0f };
+		float CurrAnimTime{ 0.0f };
+
+		std::vector<AnimJointInfo> JointInfo{};
+		std::vector<BoundingBox> FrameBounds{};
+		std::vector<Joint> BaseFrameJoints{};
+		std::vector<FrameData> Frames{};
+		std::vector<std::vector<Joint>> FrameSkeleton{};
 	};
 
 public:
@@ -40,7 +80,7 @@ public:
 	RiggedMeshRendererComponent& operator=(RiggedMeshRendererComponent&&) = default;
 	~RiggedMeshRendererComponent() override = default;
 
-	void Update(float deltaTime) override {};
+	void Update(float deltaTime) override;
 	void Render() override;
 	void RenderGUI() override;
 
@@ -52,11 +92,13 @@ protected:
 private:
 	void CreateConstantBuffer();
 	void LoadMD5Model(const std::wstring& path);
+	void LoadMD5Anim(const std::wstring& path);
 
 	int NumJoints{ 0 };
 	int NumSubsets{ 0 };
 	std::vector<ModelSubset> Subsets{};
 	std::vector<Joint> Joints{};
+	std::vector<ModelAnimation> Animations{};
 
 	std::shared_ptr<Shader> MeshShader{ nullptr };
 

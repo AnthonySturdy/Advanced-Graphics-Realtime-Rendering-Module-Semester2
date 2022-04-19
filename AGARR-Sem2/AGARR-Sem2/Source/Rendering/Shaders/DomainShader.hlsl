@@ -65,6 +65,7 @@ PS_INPUT main(
     Output.Normal = float3(patch[0].Norm * domain.x +
 						   patch[1].Norm * domain.y +
 						   patch[2].Norm * domain.z);
+    Output.Normal = mul(Output.Normal, (float3x3) World);
 
     Output.TexCoord = float2(patch[0].TexCoord * domain.x +
 							 patch[1].TexCoord * domain.y +
