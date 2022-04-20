@@ -4,6 +4,10 @@
 #include "Rendering/Mesh.h"
 #include "Rendering/Shader.h"
 
+// Animation implemented referencing following guides:
+// https://www.braynzarsoft.net/viewtutorial/q16390-27-loading-an-md5-model
+// https://www.braynzarsoft.net/viewtutorial/q16390-28-skeletal-animation-based-on-the-md5-format
+
 class RiggedMeshRendererComponent : public Component
 {
 	// MD5 Mesh

@@ -69,8 +69,7 @@ void Game::Initialize(HWND window, int width, int height)
 	cam->AddComponent(new CameraComponent());
 	TransformComponent* camTransf = cam->GetComponent<TransformComponent>();
 	camTransf->SetPosition(SimpleMath::Vector3(2.0f, 2.0f, 2.0f));
-	cam->AddComponent(new MouseLookComponent());
-	const auto terrainWalk = cam->AddComponent(new TerrainWalkComponent());
+	const auto mouseLook = cam->AddComponent(new MouseLookComponent());
 
 	GameObjects.push_back(new GameObject());
 	const auto cube = GameObjects[1];
@@ -81,12 +80,9 @@ void Game::Initialize(HWND window, int width, int height)
 	cubeMat->AddTexture(L"Resources/stone.dds");
 	cubeMat->AddTexture(L"Resources/snow.dds");
 	const auto hmGen = cube->AddComponent(new HeightmapGeneratorComponent());
-	//const auto planeGen = cube->AddComponent(new PlaneTerrainMeshGeneratorComponent());
-	cube->AddComponent(new MarchingCubesMeshGeneratorComponent());
+	const auto planeGen = cube->AddComponent(new PlaneTerrainMeshGeneratorComponent());
+	//cube->AddComponent(new MarchingCubesMeshGeneratorComponent());
 	cube->AddComponent(new MeshRendererComponent());
-
-	terrainWalk->SetHeightmapGenerator(hmGen);
-	//terrainWalk->SetPlaneGenerator(planeGen);
 
 	GameObjects.push_back(new GameObject());
 	const auto water = GameObjects[2];
@@ -98,7 +94,14 @@ void Game::Initialize(HWND window, int width, int height)
 
 	GameObjects.push_back(new GameObject());
 	const auto rigged = GameObjects[3];
+	rigged->AddComponent(new MaterialComponent())->AddTexture(L"Resources/snow.dds");
 	rigged->AddComponent(new RiggedMeshRendererComponent());
+	const auto terrainWalk = rigged->AddComponent(new TerrainWalkComponent());
+
+	terrainWalk->SetHeightmapGenerator(hmGen);
+	terrainWalk->SetPlaneGenerator(planeGen);
+
+	mouseLook->SetTarget(rigged->GetComponent<TransformComponent>());
 
 	// Vsync
 	m_timer.SetFixedTimeStep(true);

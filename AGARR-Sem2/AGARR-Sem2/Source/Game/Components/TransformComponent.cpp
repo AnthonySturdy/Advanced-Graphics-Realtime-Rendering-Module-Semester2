@@ -11,7 +11,7 @@ void TransformComponent::RenderGUI()
 	ImGui::DragFloat3("Rotation", &Rotation.x, 0.001f);
 	if (ImGui::Button("Reset Rotation"))
 		Rotation = DirectX::SimpleMath::Vector3::Zero;
-	ImGui::DragFloat3("Scale", &Scale.x, 0.1f);
+	ImGui::DragFloat3("Scale", &Scale.x, 0.001f);
 	if (ImGui::Button("Reset Scale"))
 		Scale = DirectX::SimpleMath::Vector3::One;
 

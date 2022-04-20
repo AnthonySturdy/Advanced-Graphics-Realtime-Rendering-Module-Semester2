@@ -96,6 +96,10 @@ DirectX::SimpleMath::Vector3 MarchingCubesMeshGeneratorComponent::Interpolate(fl
 	return p;
 }
 
+/***********************************************
+MARKING SCHEME: Advanced terrain generation
+DESCRIPTION:	Generates mesh from 3D terrain samples using marching cubes algorithm
+***********************************************/
 void MarchingCubesMeshGeneratorComponent::GenerateMarchingCubesMesh()
 {
 	const auto meshRenderer = Parent->GetComponent<MeshRendererComponent>();

@@ -10,6 +10,10 @@ RiggedMeshRendererComponent::RiggedMeshRendererComponent()
 	CreateConstantBuffer();
 }
 
+/***********************************************
+MARKING SCHEME: Walking animation
+DESCRIPTION:	Animation loaded via LoadMD5Anim(), animates skeleton and computes updated (animated) vertex positions
+***********************************************/
 void RiggedMeshRendererComponent::Update(float deltaTime)
 {
 	if (Animations.size() == 0)
@@ -200,6 +204,12 @@ void RiggedMeshRendererComponent::CreateConstantBuffer()
 	DX::ThrowIfFailed(device->CreateBuffer(&bd, nullptr, ConstantBuffer.ReleaseAndGetAddressOf()));
 }
 
+/***********************************************
+MARKING SCHEME: Loading a humanoid character
+				Human skeletal structure
+DESCRIPTION:	Loads mesh data and joints data from .md5mesh file.
+				Data structures found in header file.
+***********************************/
 void RiggedMeshRendererComponent::LoadMD5Model(const std::wstring& path)
 {
 	Subsets.clear();
