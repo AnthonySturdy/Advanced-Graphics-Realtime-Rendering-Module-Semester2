@@ -80,8 +80,8 @@ void Game::Initialize(HWND window, int width, int height)
 	cubeMat->AddTexture(L"Resources/stone.dds");
 	cubeMat->AddTexture(L"Resources/snow.dds");
 	const auto hmGen = cube->AddComponent(new HeightmapGeneratorComponent());
-	const auto planeGen = cube->AddComponent(new PlaneTerrainMeshGeneratorComponent());
-	//cube->AddComponent(new MarchingCubesMeshGeneratorComponent());
+	//const auto planeGen = cube->AddComponent(new PlaneTerrainMeshGeneratorComponent());
+	cube->AddComponent(new MarchingCubesMeshGeneratorComponent());
 	cube->AddComponent(new MeshRendererComponent());
 
 	GameObjects.push_back(new GameObject());
@@ -99,7 +99,7 @@ void Game::Initialize(HWND window, int width, int height)
 	const auto terrainWalk = rigged->AddComponent(new TerrainWalkComponent());
 
 	terrainWalk->SetHeightmapGenerator(hmGen);
-	terrainWalk->SetPlaneGenerator(planeGen);
+	//terrainWalk->SetPlaneGenerator(planeGen);
 
 	mouseLook->SetTarget(rigged->GetComponent<TransformComponent>());
 
