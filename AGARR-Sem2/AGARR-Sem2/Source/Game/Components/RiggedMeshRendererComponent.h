@@ -30,8 +30,6 @@ class RiggedMeshRendererComponent : public Component
 
 	struct ModelSubset
 	{
-		int TexArrayIndex{ 0 };
-
 		std::shared_ptr<Mesh> MeshData{ nullptr };
 		std::vector<Weight> Weights{};
 	};

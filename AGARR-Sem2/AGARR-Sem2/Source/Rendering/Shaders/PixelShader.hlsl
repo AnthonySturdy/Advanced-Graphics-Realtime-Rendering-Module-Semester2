@@ -54,7 +54,7 @@ float4 main(PS_INPUT Input) : SV_TARGET
     const int texIndex = floor(normHeight / individualTexHeight);
     const float individualTexNorm = fmod(normHeight, individualTexHeight) / individualTexHeight;
 
-    const float diffuse = dot(Input.Normal, normalize(float3(2.0f, 8.0f, 4.0f)));
+    const float diffuse = dot(normalize(Input.Normal), normalize(float3(2.0f, 8.0f, 4.0f)));
     const float ambient = 0.2f;
 
     if (NumTextures == 1)
