@@ -9,3 +9,4 @@ _Features:_
 - Three procedural heightmap generation algorithms (Diamond Square, Fault Line, Perlin Noise)
 - Two Terrain Mesh Generation methods (Plane, Marching Cubes)
 - Skeletal Animation (MD5)
+- Terrain LOD (using Hull and Domain shaders)
